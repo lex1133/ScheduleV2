@@ -6,6 +6,9 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    ui->centralWidget->setEnabled(false);
+    catalogsFrom = new CatalogsForm(this);
+    ui->CatalogsLayout->addWidget(catalogsFrom);
 }
 
 MainWindow::~MainWindow()
@@ -28,16 +31,10 @@ void MainWindow::OpenProject()
         else
         {
             curProject = fileName;
+            ui->centralWidget->setEnabled(true);
             XMLParser parser;
             parser.ReadXMLData(file);
-            ui->CatalogsChairsTable->setRowCount(parser.getChairs()->size());
-            int j = 0;
-            for (QHash<int,Items::ChairObj>::iterator i = parser.getChairs()->begin(); i != parser.getChairs()->end(); ++i)
-            {
-                ui->CatalogsChairsTable->setItem(j,0, new QTableWidgetItem(i.value().fullName));
-                ui->CatalogsChairsTable->setItem(j,1, new QTableWidgetItem(i.value().shortName));
-                j++;
-            }
+            catalogsFrom->loadCatalogs(&parser);
         }
     }
 }
@@ -46,7 +43,7 @@ bool MainWindow::SaveProject(QString fileName)
 {
     if(fileName.isEmpty())
         fileName = QFileDialog::getSaveFileName(this,
-                                                 tr("Сохранить расписание"), tr("C:\\Users"), tr("XML файл (*.xml)"));
+                                                tr("Сохранить расписание"), tr("C:\\Users"), tr("XML файл (*.xml)"));
     if(!fileName.isEmpty())
     {
         return true;
@@ -62,6 +59,11 @@ bool MainWindow::SaveProject(QString fileName)
 void MainWindow::on_MenuOpenProject_triggered()
 {
     OpenProject();
+}
+
+void MainWindow::on_MenuSaveProject_triggered()
+{
+    SaveProject(curProject);
 }
 
 void MainWindow::on_MenuExitApp_triggered()
@@ -83,14 +85,5 @@ void MainWindow::on_MenuExitApp_triggered()
 
 
 
-void MainWindow::on_MenuSaveProject_triggered()
-{
-    SaveProject(curProject);
-}
 
-void MainWindow::on_CatalogsChairsTable_cellDoubleClicked(int row, int column)
-{
-    ChairChangeDialog* chd = new ChairChangeDialog;
-    chd->setItem(ui->CatalogsChairsTable->item(row,0),ui->CatalogsChairsTable->item(row,1));
-    chd->show();
-}
+

@@ -8,7 +8,6 @@ QT       += core gui xml
 QT += widgets
 TARGET = ScheduleV2
 TEMPLATE = app
-RC_FILE += appres.rc
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which has been marked as deprecated (the exact warnings
 # depend on your compiler). Please consult the documentation of the
@@ -25,17 +24,20 @@ SOURCES += \
         main.cpp \
         mainwindow.cpp \
     xmlparser.cpp \
-    chairchangedialog.cpp
+    chairchangedialog.cpp \
+    catalogsform.cpp
 
 HEADERS += \
         mainwindow.h \
     items.h \
     xmlparser.h \
-    chairchangedialog.h
+    chairchangedialog.h \
+    catalogsform.h
 
 FORMS += \
         mainwindow.ui \
-    chairchangedialog.ui
+    chairchangedialog.ui \
+    catalogsform.ui
 
 
 RESOURCES += \

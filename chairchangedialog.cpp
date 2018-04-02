@@ -9,12 +9,15 @@ ChairChangeDialog::ChairChangeDialog(QWidget *parent) :
     ui->setupUi(this);
 }
 
-void ChairChangeDialog::setItem(QTableWidgetItem* fNameitem_,QTableWidgetItem* sNameitem_)
+void ChairChangeDialog::editItem(QTableWidget* table_,int row_)
 {
-    this->fNameitem = fNameitem_;
-    this->sNameitem = sNameitem_;
-    ui->FullChairName->setText(this->fNameitem->text());
-    ui->ShortChairName->setText(this->sNameitem->text());
+    this->table = table_;
+    this->row = row_;
+    if(row != -1)
+    {
+        ui->FullChairName->setText(this->table->item(row,0)->text());
+        ui->ShortChairName->setText(this->table->item(row,1)->text());
+    }
 }
 
 ChairChangeDialog::~ChairChangeDialog()
@@ -24,8 +27,17 @@ ChairChangeDialog::~ChairChangeDialog()
 
 void ChairChangeDialog::on_OKButton_clicked()
 {
-    fNameitem->setText(ui->FullChairName->text());
-    sNameitem->setText(ui->ShortChairName->text());
+    if(row != -1)
+    {
+        this->table->item(row,0)->setText(ui->FullChairName->text());
+        this->table->item(row,1)->setText(ui->ShortChairName->text());
+    }
+    else
+    {
+        table->setRowCount(table->rowCount()+1);
+        this->table->setItem(table->rowCount()-1,0,new QTableWidgetItem(ui->FullChairName->text()));
+        this->table->setItem(table->rowCount()-1,1,new QTableWidgetItem(ui->ShortChairName->text()));
+    }
     this->close();
 }
 

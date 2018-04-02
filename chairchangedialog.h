@@ -15,7 +15,7 @@ class ChairChangeDialog : public QDialog
 
 public:
     explicit ChairChangeDialog(QWidget *parent = 0);
-    void setItem(QTableWidgetItem* fNameitem_,QTableWidgetItem* sNameitem_);
+    void editItem(QTableWidget* table_, int row_);
     ~ChairChangeDialog();
 
 private slots:
@@ -25,8 +25,8 @@ private slots:
 
 private:
     Ui::ChairChangeDialog *ui;
-    QTableWidgetItem* fNameitem;
-    QTableWidgetItem* sNameitem;
+    QTableWidget* table;
+    int row;
 };
 
 #endif // CHAIRCHANGEDIALOG_H

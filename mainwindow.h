@@ -2,7 +2,7 @@
 #define MAINWINDOW_H
 
 #include "xmlparser.h"
-#include "chairchangedialog.h"
+#include "catalogsform.h"
 
 #include <QMainWindow>
 #include <QMessageBox>
@@ -34,11 +34,10 @@ private slots:
 
     void on_MenuSaveProject_triggered();
 
-    void on_CatalogsChairsTable_cellDoubleClicked(int row, int column);
-
 private:
     Ui::MainWindow *ui;
     QString curProject;
+    CatalogsForm* catalogsFrom;
 };
 
 #endif // MAINWINDOW_H
