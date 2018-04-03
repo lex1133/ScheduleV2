@@ -3,10 +3,10 @@
 
 #include "items.h"
 #include "xmlparser.h"
-#include "chairchangedialog.h"
 
 #include <QWidget>
 #include <QMessageBox>
+#include <QDebug>
 
 namespace Ui {
 class CatalogsForm;
@@ -25,14 +25,14 @@ private:
     Ui::CatalogsForm *ui;    
     XMLParser* parser;
     void loadChairs();
+    void loadTeachers();
+    void loadRooms();
+    void loadSubjects();
+    void loadClasses();
 
 private slots:
 
     void on_CatalogsChairsTable_cellDoubleClicked(int row, int column);
-
-    void on_AddChairButton_clicked();
-
-    void on_DeleteChairButton_clicked();
 
 };
 

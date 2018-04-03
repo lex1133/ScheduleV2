@@ -37,7 +37,6 @@ private slots:
 private:
     Ui::MainWindow *ui;
     QString curProject;
-    CatalogsForm* catalogsFrom;
 };
 
 #endif // MAINWINDOW_H

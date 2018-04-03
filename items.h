@@ -10,12 +10,8 @@ namespace Items {
 struct ClassObj
 {
     QString name;
-    int session;
     int students;
-    int min_lessons;
-    int max_lessons;
     QVector<QVector<int>> work_hours;
-    int speciality_id;
     int semester;
     ClassObj(){}
 };
@@ -31,8 +27,8 @@ struct RoomObj
 {
     QString name;
     int capacity;
-    int building;
     int chairId;
+    bool haveSocket;
     QVector<QVector<int>> work_hours;
     RoomObj(){}
 };
@@ -41,14 +37,8 @@ struct TeacherObj
 {
     QString surname;
     QString firstName;
-    QString SecondName;
-    QString comment;
-    int classId;
-    int subjectId;
-    int roomId;
+    QString secondName;
     int chairId;
-    int methodDays;
-    int maxWindows;
     QVector<QVector<int>> work_hours;
     TeacherObj(){}
 };
@@ -67,11 +57,25 @@ struct ChairObj
     ChairObj() {}
 };
 
-struct SpecialityObj
+struct GroupObj
 {
-    QString shortName;
-    QString fullName;
-    SpecialityObj() {}
+    int teacherId;
+    int subjectId;
+    QVector<int> roomIdList;
+    int hoursTotal;
+    int hoursPerWeek;
+    QString weekType;
+    QString periodPosition;
+    QString pairType;
+    int studyTypeId;
+    QVector<int> hourPerWeekList;
+};
+
+struct LoadObj
+{
+    bool sameTime;
+    QVector<GroupObj> groups;
+    QVector<int> klassIdList;
 };
 }
 #endif // ITEMS_H

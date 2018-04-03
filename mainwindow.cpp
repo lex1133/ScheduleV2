@@ -7,8 +7,6 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
     ui->centralWidget->setEnabled(false);
-    catalogsFrom = new CatalogsForm(this);
-    ui->CatalogsLayout->addWidget(catalogsFrom);
 }
 
 MainWindow::~MainWindow()
@@ -34,7 +32,7 @@ void MainWindow::OpenProject()
             ui->centralWidget->setEnabled(true);
             XMLParser parser;
             parser.ReadXMLData(file);
-            catalogsFrom->loadCatalogs(&parser);
+            ui->CatalogsTab->loadCatalogs(&parser);
         }
     }
 }

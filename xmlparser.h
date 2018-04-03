@@ -14,6 +14,10 @@ public:
     XMLParser();
     void ReadXMLData(QFile* file);
     QHash<int,Items::ChairObj>* getChairs();
+    QHash<int,Items::TeacherObj>* getTeachers();
+    QHash<int,Items::RoomObj>* getRooms();
+    QHash<int,Items::SubjectObj>* getSubjects();
+    QHash<int,Items::ClassObj>* getClasses();
 
 private:
 
@@ -23,7 +27,7 @@ private:
     void ReadTeachers();
     void ReadStudyTypes();
     void ReadChairs();
-    void ReadSpecialities();
+    void ReadLoads();
 
     QXmlStreamReader xml;
     QHash<int,Items::ClassObj> classes;
@@ -32,7 +36,7 @@ private:
     QHash<int,Items::TeacherObj> teachers;
     QHash<int,Items::StudyTypeObj> studyTypes;
     QHash<int,Items::ChairObj> chairs;
-    QHash<int,Items::SpecialityObj> specialities;
+    QHash<int,Items::LoadObj> loads;
 };
 
 #endif // XMLPARSER_H

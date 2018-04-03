@@ -12,6 +12,12 @@ TEMPLATE = app
 # any feature of Qt which has been marked as deprecated (the exact warnings
 # depend on your compiler). Please consult the documentation of the
 # deprecated API in order to know how to port your code away from it.
+RC_ICONS = Icon.ico
+VERSION = 0.0.0.1
+QMAKE_TARGET_COMPANY = "lex1133's Software"
+QMAKE_TARGET_PRODUCT = "������ ���������� �������"
+QMAKE_TARGET_DESCRIPTION = "��������� ��� ������ ���������� � ������������ ���������"
+QMAKE_TARGET_COPYRIGHT = "��������"
 DEFINES += QT_DEPRECATED_WARNINGS
 
 # You can also make your code fail to compile if you use deprecated APIs.
@@ -24,20 +30,20 @@ SOURCES += \
         main.cpp \
         mainwindow.cpp \
     xmlparser.cpp \
-    chairchangedialog.cpp \
-    catalogsform.cpp
+    catalogsform.cpp \
+    sheduleform.cpp
 
 HEADERS += \
         mainwindow.h \
     items.h \
     xmlparser.h \
-    chairchangedialog.h \
-    catalogsform.h
+    catalogsform.h \
+    sheduleform.h
 
 FORMS += \
         mainwindow.ui \
-    chairchangedialog.ui \
-    catalogsform.ui
+    catalogsform.ui \
+    sheduleform.ui
 
 
 RESOURCES += \

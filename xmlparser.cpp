@@ -26,8 +26,8 @@ void XMLParser::ReadXMLData(QFile* file)
                     ReadStudyTypes();
                 else if(xml.name() == "chairs")
                     ReadChairs();
-                else if(xml.name() == "specialities>")
-                    ReadSpecialities();
+                else if(xml.name() == "loads")
+                    ReadLoads();
                 else
                     xml.skipCurrentElement();
             }
@@ -44,6 +44,26 @@ QHash<int, Items::ChairObj>* XMLParser::getChairs()
     return &chairs;
 }
 
+QHash<int, Items::TeacherObj> *XMLParser::getTeachers()
+{
+    return &teachers;
+}
+
+QHash<int, Items::RoomObj> *XMLParser::getRooms()
+{
+    return &rooms;
+}
+
+QHash<int, Items::SubjectObj> *XMLParser::getSubjects()
+{
+    return &subjects;
+}
+
+QHash<int, Items::ClassObj> *XMLParser::getClasses()
+{
+    return &classes;
+}
+
 void XMLParser::ReadClasses()
 {
     Items::ClassObj classObj;
@@ -54,16 +74,8 @@ void XMLParser::ReadClasses()
             id = xml.readElementText().toInt();
         if (xml.name() == "name")
             classObj.name = xml.readElementText();
-        if (xml.name() == "session")
-            classObj.session = xml.readElementText().toInt();
         if (xml.name() == "student")
             classObj.students = xml.readElementText().toInt();
-        if (xml.name() == "min_lessons_per_day")
-            classObj.min_lessons = xml.readElementText().toInt();
-        if (xml.name() == "max_lessons_per_day")
-            classObj.max_lessons = xml.readElementText().toInt();
-        if (xml.name() == "speciality_id")
-            classObj.speciality_id = xml.readElementText().toInt();
         if (xml.name() == "semester")
             classObj.semester = xml.readElementText().toInt();
         if (xml.name() == "work_hours")
@@ -128,8 +140,6 @@ void XMLParser::ReadRooms()
             roomObj.name = xml.readElementText();
         if (xml.name() == "capacity")
             roomObj.capacity = xml.readElementText().toInt();
-        if (xml.name() == "building")
-            roomObj.building = xml.readElementText().toInt();
         if (xml.name() == "chair_id")
             roomObj.chairId = xml.readElementText().toInt();
         if (xml.name() == "work_hours")
@@ -174,19 +184,9 @@ void XMLParser::ReadTeachers()
         if (xml.name() == "first_name")
             teacherObj.firstName = xml.readElementText();
         if (xml.name() == "second_name")
-            teacherObj.SecondName = xml.readElementText();
-        if (xml.name() == "comment")
-            teacherObj.comment = xml.readElementText();
-        if (xml.name() == "class_id")
-            teacherObj.classId = xml.readElementText().toInt();
-        if (xml.name() == "subject_id")
-            teacherObj.subjectId = xml.readElementText().toInt();
+            teacherObj.secondName = xml.readElementText();
         if (xml.name() == "chair_id")
             teacherObj.chairId = xml.readElementText().toInt();
-        if (xml.name() == "method_days")
-            teacherObj.methodDays = xml.readElementText().toInt();
-        if (xml.name() == "max_windows")
-            teacherObj.maxWindows = xml.readElementText().toInt();
         if (xml.name() == "work_hours")
         {
             teacherObj.work_hours.clear();
@@ -208,7 +208,7 @@ void XMLParser::ReadTeachers()
                 xml.readNext();
             }
         }
-        if((xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == "teacher"))
+        if((xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == "teacher") && (teacherObj.firstName != "Fake" && teacherObj.surname[0] != '_' && teacherObj.surname != '='))
         {
             teachers[id] = teacherObj;
         }
@@ -257,21 +257,89 @@ void XMLParser::ReadChairs()
     }
 }
 
-void XMLParser::ReadSpecialities()
+void XMLParser::ReadLoads()
 {
-    Items::SpecialityObj specialityObj;
+    Items::LoadObj loadObj;
     int id = 0;
-    while (!(xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == "specialities"))
+    while (!(xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == "loads"))
     {
         if (xml.name() == "id")
             id = xml.readElementText().toInt();
-        if (xml.name() == "short_name")
-            specialityObj.shortName = xml.readElementText();
-        if (xml.name() == "full_name")
-            specialityObj.fullName = xml.readElementText();
-        if((xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == "speciality"))
+        if (xml.name() == "same_time")
+            loadObj.sameTime = xml.readElementText().toInt();
+        if (xml.name() == "groups")
         {
-            specialities[id] = specialityObj;
+            loadObj.groups.clear();
+            xml.readNext();
+            while (!(xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == "groups"))
+            {
+                if(xml.name() == "group")
+                {
+                    Items::GroupObj group;
+                    while(!(xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == "group"))
+                    {
+                        if(xml.name() == "teacher_id")
+                            group.teacherId = xml.readElementText().toInt();
+                        if(xml.name() == "subject_id")
+                            group.subjectId = xml.readElementText().toInt();
+                        if(xml.name() == "room_id_list")
+                        {
+                            QVector<int> roomIdList;
+                            roomIdList.clear();
+                            while(!(xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == "room_id_list"))
+                            {
+                                if(xml.name() == "int")
+                                    roomIdList.push_back(xml.readElementText().toInt());
+                                xml.readNext();
+                            }
+                            group.roomIdList = roomIdList;
+                        }
+                        if(xml.name() == "hours_total")
+                            group.hoursTotal = xml.readElementText().toInt();
+                        if(xml.name() == "hours_per_week")
+                            group.hoursPerWeek = xml.readElementText().toInt();
+                        if(xml.name() == "week_type")
+                            group.weekType = xml.readElementText();
+                        if(xml.name() == "period_position")
+                            group.periodPosition = xml.readElementText();
+                        if(xml.name() == "pair_type")
+                            group.pairType= xml.readElementText();
+                        if(xml.name() == "study_type_id")
+                            group.studyTypeId = xml.readElementText().toInt();
+                        if(xml.name() == "hour_per_week_list")
+                        {
+                            QVector<int> hourPerWeekList;
+                            hourPerWeekList.clear();
+                            while(!(xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == "hour_per_week_list"))
+                            {
+                                if(xml.name() == "int")
+                                    hourPerWeekList.push_back(xml.readElementText().toInt());
+                                xml.readNext();
+                            }
+                            group.hourPerWeekList = hourPerWeekList;
+                        }
+                        xml.readNext();
+                    }
+                    loadObj.groups.push_back(group);
+                }
+                xml.readNext();
+            }
+        }
+        if(xml.name() == "klass_id_list")
+        {
+            QVector<int> klassIdList;
+            klassIdList.clear();
+            while(!(xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == "klass_id_list"))
+            {
+                if(xml.name() == "int")
+                    klassIdList.push_back(xml.readElementText().toInt());
+                xml.readNext();
+            }
+            loadObj.klassIdList = klassIdList;
+        }
+        if((xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == "load"))
+        {
+            loads[id] = loadObj;
         }
         xml.readNext();
     }

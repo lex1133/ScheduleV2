@@ -19,6 +19,11 @@
   <property name="windowTitle">
    <string>Расписание V2.0</string>
   </property>
+  <property name="windowIcon">
+   <iconset>
+    <normalon>:/Icons/Icon.bmp</normalon>
+   </iconset>
+  </property>
   <property name="toolButtonStyle">
    <enum>Qt::ToolButtonIconOnly</enum>
   </property>
@@ -38,26 +43,15 @@
       <property name="currentIndex">
        <number>0</number>
       </property>
-      <widget class="QWidget" name="CatalogsTab">
+      <widget class="CatalogsForm" name="CatalogsTab">
+       <property name="maximumSize">
+        <size>
+         <width>776</width>
+         <height>16777215</height>
+        </size>
+       </property>
        <attribute name="title">
         <string>Списки</string>
-       </attribute>
-       <layout class="QGridLayout" name="gridLayout_2">
-        <item row="0" column="0">
-         <layout class="QGridLayout" name="CatalogsLayout">
-          <property name="sizeConstraint">
-           <enum>QLayout::SetNoConstraint</enum>
-          </property>
-          <property name="spacing">
-           <number>0</number>
-          </property>
-         </layout>
-        </item>
-       </layout>
-      </widget>
-      <widget class="QWidget" name="LoadsTab">
-       <attribute name="title">
-        <string>Нагрузки</string>
        </attribute>
       </widget>
      </widget>
@@ -157,6 +151,14 @@
   </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
+ <customwidgets>
+  <customwidget>
+   <class>CatalogsForm</class>
+   <extends>QWidget</extends>
+   <header>catalogsform.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>
