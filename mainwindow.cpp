@@ -28,11 +28,13 @@ void MainWindow::OpenProject()
         }
         else
         {
-            curProject = fileName;
-            ui->centralWidget->setEnabled(true);
             XMLParser parser;
-            parser.ReadXMLData(file);
-            ui->CatalogsTab->loadCatalogs(&parser);
+            if(parser.ReadXMLData(file))
+            {
+                curProject = fileName;
+                ui->centralWidget->setEnabled(true);
+                ui->CatalogsTab->loadCatalogs(&parser);
+            }
         }
     }
 }

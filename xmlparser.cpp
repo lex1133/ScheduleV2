@@ -5,7 +5,7 @@ XMLParser::XMLParser()
 
 }
 
-void XMLParser::ReadXMLData(QFile* file)
+bool XMLParser::ReadXMLData(QFile* file)
 {
     xml.setDevice(file);
     while (!xml.atEnd() && !xml.hasError() && xml.readNextStartElement())
@@ -28,6 +28,10 @@ void XMLParser::ReadXMLData(QFile* file)
                     ReadChairs();
                 else if(xml.name() == "loads")
                     ReadLoads();
+                else if(xml.name() == "scheds")
+                    ReadScheds();
+                else if(xml.name() == "plans" && xml.tokenType() == QXmlStreamReader::EndElement)
+                    int k = 0;
                 else
                     xml.skipCurrentElement();
             }
@@ -37,6 +41,16 @@ void XMLParser::ReadXMLData(QFile* file)
             xml.skipCurrentElement();
         }
     }
+    int i = 0;
+    if(xml.hasError()) {
+            QMessageBox::critical(nullptr,
+            "Ошибка чтения XML-файла.",xml.errorString(),
+            QMessageBox::Ok);
+            return false;
+    }
+    return true;
+    xml.clear();
+    file->close();
 }
 
 QHash<int, Items::ChairObj>* XMLParser::getChairs()
@@ -62,6 +76,16 @@ QHash<int, Items::SubjectObj> *XMLParser::getSubjects()
 QHash<int, Items::ClassObj> *XMLParser::getClasses()
 {
     return &classes;
+}
+
+QHash<int, Items::LoadObj> *XMLParser::getLoads()
+{
+    return &loads;
+}
+
+QHash<int, Items::SchedObj> *XMLParser::getScheds()
+{
+    return &scheds;
 }
 
 void XMLParser::ReadClasses()
@@ -340,6 +364,37 @@ void XMLParser::ReadLoads()
         if((xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == "load"))
         {
             loads[id] = loadObj;
+        }
+        xml.readNext();
+    }
+}
+
+void XMLParser::ReadScheds()
+{
+    Items::SchedObj schedObj;
+    int id = 0;
+    while (!(xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == "scheds"))
+    {
+        if (xml.name() == "day")
+            schedObj.day = xml.readElementText().toInt();
+        if (xml.name() == "hour")
+            schedObj.hour = xml.readElementText().toInt();
+        if (xml.name() == "group")
+            schedObj.group = xml.readElementText().toInt();
+        if (xml.name() == "load_id")
+            schedObj.loadId = xml.readElementText().toInt();
+        if (xml.name() == "room_id")
+            schedObj.roomId = xml.readElementText().toInt();
+        if (xml.name() == "fixed")
+            schedObj.fixed = xml.readElementText().toInt();
+        if (xml.name() == "begin_date")
+            schedObj.beginDate = xml.readElementText();
+        if (xml.name() == "end_date")
+            schedObj.endDate = xml.readElementText();
+        if((xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == "sched"))
+        {
+            scheds[id] = schedObj;
+            id++;
         }
         xml.readNext();
     }

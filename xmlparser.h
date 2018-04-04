@@ -6,18 +6,21 @@
 #include <QXmlStreamWriter>
 #include <QXmlStreamReader>
 #include <QXmlStreamAttribute>
+#include <QMessageBox>
 
 
 class XMLParser
 {
 public:
     XMLParser();
-    void ReadXMLData(QFile* file);
+    bool ReadXMLData(QFile* file);
     QHash<int,Items::ChairObj>* getChairs();
     QHash<int,Items::TeacherObj>* getTeachers();
     QHash<int,Items::RoomObj>* getRooms();
     QHash<int,Items::SubjectObj>* getSubjects();
     QHash<int,Items::ClassObj>* getClasses();
+    QHash<int,Items::LoadObj>* getLoads();
+    QHash<int,Items::SchedObj>* getScheds();
 
 private:
 
@@ -28,6 +31,7 @@ private:
     void ReadStudyTypes();
     void ReadChairs();
     void ReadLoads();
+    void ReadScheds();
 
     QXmlStreamReader xml;
     QHash<int,Items::ClassObj> classes;
@@ -37,6 +41,7 @@ private:
     QHash<int,Items::StudyTypeObj> studyTypes;
     QHash<int,Items::ChairObj> chairs;
     QHash<int,Items::LoadObj> loads;
+    QHash<int,Items::SchedObj> scheds;
 };
 
 #endif // XMLPARSER_H

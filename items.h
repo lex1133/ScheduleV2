@@ -69,6 +69,7 @@ struct GroupObj
     QString pairType;
     int studyTypeId;
     QVector<int> hourPerWeekList;
+    GroupObj() {}
 };
 
 struct LoadObj
@@ -76,6 +77,21 @@ struct LoadObj
     bool sameTime;
     QVector<GroupObj> groups;
     QVector<int> klassIdList;
+    LoadObj() {}
 };
+
+struct SchedObj
+{
+    int day;
+    int hour;
+    int group;
+    int loadId;
+    int roomId;
+    bool fixed;
+    QString beginDate;
+    QString endDate;
+    SchedObj() {}
+};
+
 }
 #endif // ITEMS_H

@@ -54,6 +54,11 @@
         <string>Списки</string>
        </attribute>
       </widget>
+      <widget class="SheduleForm" name="ScheduleTab">
+       <attribute name="title">
+        <string>Расписание</string>
+       </attribute>
+      </widget>
      </widget>
     </item>
    </layout>
@@ -156,6 +161,12 @@
    <class>CatalogsForm</class>
    <extends>QWidget</extends>
    <header>catalogsform.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>SheduleForm</class>
+   <extends>QWidget</extends>
+   <header>sheduleform.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
