@@ -7,6 +7,7 @@
 #include <QXmlStreamReader>
 #include <QXmlStreamAttribute>
 #include <QMessageBox>
+#include <QDebug>
 
 
 class XMLParser
@@ -33,7 +34,8 @@ private:
     void ReadLoads();
     void ReadScheds();
 
-    QXmlStreamReader xml;
+    QXmlStreamReader xml;    
+    bool result = true;
     QHash<int,Items::ClassObj> classes;
     QHash<int,Items::SubjectObj> subjects;
     QHash<int,Items::RoomObj> rooms;
