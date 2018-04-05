@@ -20,7 +20,13 @@ bool XMLParser::ReadXMLData(QFile* file)
                         result = false;
                         break;
                 }
-                if(xml.name() == "classes")
+                if(xml.name() == "times")
+                    ReadTimes();
+                else if(xml.name() == "holidays")
+                    ReadHolidays();
+                else if(xml.name() == "term")
+                    ReadTerm();
+                else if(xml.name() == "classes")
                     ReadClasses();
                 else if(xml.name() == "subjects")
                     ReadSubjects();
@@ -57,6 +63,21 @@ bool XMLParser::ReadXMLData(QFile* file)
     return result;
 }
 
+Items::TermObj *XMLParser::getTerm()
+{
+    return &term;
+}
+
+Items::TimesObj *XMLParser::getTimes()
+{
+    return &times;
+}
+
+Items::HolidaysObj *XMLParser::getHolidays()
+{
+    return &holidays;
+}
+
 QHash<int, Items::ChairObj>* XMLParser::getChairs()
 {
     return &chairs;
@@ -90,6 +111,62 @@ QHash<int, Items::LoadObj> *XMLParser::getLoads()
 QHash<int, Items::SchedObj> *XMLParser::getScheds()
 {
     return &scheds;
+}
+
+void XMLParser::ReadTerm()
+{
+    Items::TermObj termObj;
+    while (!(xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == "term"))
+    {
+        if(xml.hasError()) {
+                result = false;
+                break;
+        }
+        if (xml.name() == "begin_date")
+            termObj.beginDate = xml.readElementText();
+        if (xml.name() == "end_date")
+            termObj.endDate = xml.readElementText();
+        xml.readNext();
+    }
+
+    term = termObj;
+}
+
+void XMLParser::ReadTimes()
+{
+    Items::TimesObj timesObj;
+    if(xml.name() == "times")
+    {
+        QVector<QString> time;
+        time.clear();
+        while(!(xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == "times"))
+        {
+            if(xml.name() == "time")
+                time.push_back(xml.readElementText());
+            xml.readNext();
+        }
+        timesObj.time = time;
+    }
+    times = timesObj;
+}
+
+void XMLParser::ReadHolidays()
+{
+    Items::HolidaysObj holidaysObj;
+    if(xml.name() == "holidays")
+    {
+        QVector<QString> day;
+        day.clear();
+        while(!(xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == "holidays"))
+        {
+            if(xml.name() == "day")
+                day.push_back(xml.readElementText());
+            xml.readNext();
+        }
+        holidaysObj.day = day;
+    }
+    holidays = holidaysObj;
+
 }
 
 void XMLParser::ReadClasses()
@@ -264,7 +341,7 @@ void XMLParser::ReadTeachers()
                 xml.readNext();
             }
         }
-        if((xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == "teacher") && (teacherObj.firstName != "Fake" && teacherObj.surname[0] != '_' && teacherObj.surname != '='))
+        if((xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == "teacher")) // && (teacherObj.firstName != "Fake" && teacherObj.surname[0] != '_' && teacherObj.surname != '=')
         {
             teachers[id] = teacherObj;
         }

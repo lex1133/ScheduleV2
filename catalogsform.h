@@ -5,7 +5,6 @@
 #include "xmlparser.h"
 
 #include <QWidget>
-#include <QMessageBox>
 #include <QDebug>
 
 namespace Ui {
@@ -33,7 +32,12 @@ private:
 private slots:
 
     void on_CatalogsChairsTable_cellDoubleClicked(int row, int column);
-
+    void on_SubjectsSearchLine_textEdited(const QString &arg1);
+    void on_ClassesSearchLine_textEdited(const QString &arg1);
+    void on_RoomsSearchLine_textEdited(const QString &arg1);
+    void on_TeachersSearchLine_textEdited(const QString &arg1);
+    void on_ChairsSearchLine_textEdited(const QString &arg1);
+    void on_ChairsSearchInCombo_currentIndexChanged(int index);
 };
 
 #endif // CATALOGSFORM_H

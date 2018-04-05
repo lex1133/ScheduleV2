@@ -60,7 +60,38 @@
        <string>Кафедры</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout_2">
+       <item row="0" column="3">
+        <widget class="QComboBox" name="ChairsSearchInCombo">
+         <item>
+          <property name="text">
+           <string>Полному названию</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Сокращ. названию</string>
+          </property>
+         </item>
+        </widget>
+       </item>
+       <item row="0" column="2">
+        <widget class="QLabel" name="ChairsSearchInLabel">
+         <property name="text">
+          <string>По:</string>
+         </property>
+        </widget>
+       </item>
        <item row="0" column="0">
+        <widget class="QLabel" name="ChairsSearchLabel">
+         <property name="text">
+          <string>Поиск:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QLineEdit" name="ChairsSearchLine"/>
+       </item>
+       <item row="1" column="0" colspan="4">
         <widget class="QTableWidget" name="CatalogsChairsTable">
          <property name="editTriggers">
           <set>QAbstractItemView::NoEditTriggers</set>
@@ -118,6 +149,16 @@
       </attribute>
       <layout class="QGridLayout" name="gridLayout_3">
        <item row="0" column="0">
+        <widget class="QLabel" name="TeachersSearchLabel">
+         <property name="text">
+          <string>Поиск:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QLineEdit" name="TeachersSearchLine"/>
+       </item>
+       <item row="1" column="0" colspan="2">
         <widget class="QTableWidget" name="CatalogsTeachersTable">
          <property name="editTriggers">
           <set>QAbstractItemView::NoEditTriggers</set>
@@ -172,6 +213,16 @@
       </attribute>
       <layout class="QGridLayout" name="gridLayout_4">
        <item row="0" column="0">
+        <widget class="QLabel" name="RoomsSearchLabel">
+         <property name="text">
+          <string>Поиск:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QLineEdit" name="RoomsSearchLine"/>
+       </item>
+       <item row="1" column="0" colspan="2">
         <widget class="QTableWidget" name="CatalogsRoomsTable">
          <property name="editTriggers">
           <set>QAbstractItemView::NoEditTriggers</set>
@@ -222,6 +273,16 @@
       </attribute>
       <layout class="QGridLayout" name="gridLayout_6">
        <item row="0" column="0">
+        <widget class="QLabel" name="SubjectsSearchLabel">
+         <property name="text">
+          <string>Поиск:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QLineEdit" name="SubjectsSearchLine"/>
+       </item>
+       <item row="1" column="0" colspan="2">
         <widget class="QTableWidget" name="CatalogsSubjectsTable">
          <property name="editTriggers">
           <set>QAbstractItemView::NoEditTriggers</set>
@@ -267,6 +328,16 @@
       </attribute>
       <layout class="QGridLayout" name="gridLayout_5">
        <item row="0" column="0">
+        <widget class="QLabel" name="ClassesSearchLabel">
+         <property name="text">
+          <string>Поиск:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QLineEdit" name="ClassesSearchLine"/>
+       </item>
+       <item row="1" column="0" colspan="2">
         <widget class="QTableWidget" name="CatalogsClassesTable">
          <property name="editTriggers">
           <set>QAbstractItemView::NoEditTriggers</set>

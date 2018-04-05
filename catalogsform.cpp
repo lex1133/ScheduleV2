@@ -105,3 +105,94 @@ void CatalogsForm::on_CatalogsChairsTable_cellDoubleClicked(int row, int column)
 {
 
 }
+
+void CatalogsForm::on_SubjectsSearchLine_textEdited(const QString &arg1)
+{
+    auto search = ui->CatalogsSubjectsTable->findItems(arg1,Qt::MatchStartsWith);
+    for( int i = 0; i < ui->CatalogsSubjectsTable->rowCount(); ++i )
+    {
+        bool match = false;
+
+        QTableWidgetItem *item = ui->CatalogsSubjectsTable->item( i, 0 );
+        if( search.contains(item))
+        {
+            match = true;
+        }
+
+        ui->CatalogsSubjectsTable->setRowHidden( i, !match );
+    }
+}
+
+void CatalogsForm::on_ClassesSearchLine_textEdited(const QString &arg1)
+{
+    auto search = ui->CatalogsClassesTable->findItems(arg1,Qt::MatchStartsWith);
+    for( int i = 0; i < ui->CatalogsClassesTable->rowCount(); ++i )
+    {
+        bool match = false;
+
+        QTableWidgetItem *item = ui->CatalogsClassesTable->item( i, 0 );
+        if( search.contains(item))
+        {
+            match = true;
+        }
+
+        ui->CatalogsClassesTable->setRowHidden( i, !match );
+    }
+}
+
+void CatalogsForm::on_RoomsSearchLine_textEdited(const QString &arg1)
+{
+    auto search = ui->CatalogsRoomsTable->findItems(arg1,Qt::MatchStartsWith);
+    for( int i = 0; i < ui->CatalogsRoomsTable->rowCount(); ++i )
+    {
+        bool match = false;
+
+        QTableWidgetItem *item = ui->CatalogsRoomsTable->item( i, 0 );
+        if( search.contains(item))
+        {
+            match = true;
+        }
+
+        ui->CatalogsRoomsTable->setRowHidden( i, !match );
+    }
+}
+
+void CatalogsForm::on_TeachersSearchLine_textEdited(const QString &arg1)
+{
+    auto search = ui->CatalogsTeachersTable->findItems(arg1,Qt::MatchContains);
+    for( int i = 0; i < ui->CatalogsTeachersTable->rowCount(); ++i )
+    {
+        bool match = false;
+
+        QTableWidgetItem *item = ui->CatalogsTeachersTable->item( i, 0 );
+        if( search.contains(item))
+        {
+            match = true;
+        }
+
+        ui->CatalogsTeachersTable->setRowHidden( i, !match );
+    }
+}
+
+void CatalogsForm::on_ChairsSearchLine_textEdited(const QString &arg1)
+{
+    auto search = ui->CatalogsChairsTable->findItems(arg1,Qt::MatchContains);
+    int column = ui->ChairsSearchInCombo->currentIndex();
+    for( int i = 0; i < ui->CatalogsChairsTable->rowCount(); ++i )
+    {
+        bool match = false;
+
+        QTableWidgetItem *item = ui->CatalogsChairsTable->item( i, column );
+        if( search.contains(item))
+        {
+            match = true;
+        }
+
+        ui->CatalogsChairsTable->setRowHidden( i, !match );
+    }
+}
+
+void CatalogsForm::on_ChairsSearchInCombo_currentIndexChanged(int index)
+{
+    on_ChairsSearchLine_textEdited((ui->ChairsSearchLine->text()));
+}

@@ -5,7 +5,24 @@
 
 namespace Items {
 
+struct TermObj
+{
+    QString beginDate;
+    QString endDate;
+    TermObj() {}
+};
 
+struct TimesObj
+{
+    QVector<QString> time;
+    TimesObj() {}
+};
+
+struct HolidaysObj
+{
+    QVector<QString> day;
+    HolidaysObj() {}
+};
 
 struct ClassObj
 {
