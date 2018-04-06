@@ -28,13 +28,13 @@ void MainWindow::OpenProject()
         }
         else
         {
-            XMLParser parser;
             if(parser.ReadXMLData(file))
             {
                 curProject = fileName;
                 ui->centralWidget->setEnabled(true);
                 ui->CatalogsTab->loadCatalogs(&parser);
                 ui->ScheduleTab->loadShedule(&parser);
+                int i = 0;
             }
         }
     }

@@ -36,7 +36,8 @@ private slots:
 
 private:
     Ui::MainWindow *ui;
-    QString curProject;
+    QString curProject;   
+    XMLParser parser;
 };
 
 #endif // MAINWINDOW_H

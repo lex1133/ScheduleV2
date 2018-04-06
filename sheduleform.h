@@ -9,6 +9,7 @@
 #include <QDate>
 #include <math.h>
 
+
 namespace Ui {
 class SheduleForm;
 }
@@ -23,9 +24,26 @@ public:
     void loadShedule(XMLParser* parser_);
     void updateTable();
 
+private slots:
+
+    void on_RoomsComboBox_currentIndexChanged(int index);
+
+    void on_WeekComboBox_currentIndexChanged(int index);
+
 private:
+    QDate beginDate;
+    QDate endDate;
     Ui::SheduleForm *ui;
     XMLParser* parser;
+    bool loaded = false;
+    struct schedInfo
+    {
+        QString className;
+        QString group;
+        QString subjectName;
+        QString teacherName;
+        schedInfo() {}
+    };
 };
 
 #endif // SHEDULEFORM_H
