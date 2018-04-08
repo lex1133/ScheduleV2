@@ -20,6 +20,8 @@ void ScheduleForm::loadSchedule(XMLParser *parser_)
     {
         ui->RoomsComboBox->addItem(i.value().name);
     }
+    ui->RoomsComboBox->model()->sort(0);
+    ui->RoomsComboBox->setCurrentIndex(0);
 
     beginDate = QDate::fromString(parser->getTerm()->beginDate,"dd.MM.yyyy");
     endDate = QDate::fromString(parser->getTerm()->endDate,"dd.MM.yyyy");
