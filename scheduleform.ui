@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>SheduleForm</class>
- <widget class="QWidget" name="SheduleForm">
+ <class>ScheduleForm</class>
+ <widget class="QWidget" name="ScheduleForm">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -110,10 +110,10 @@
       <bool>false</bool>
      </attribute>
      <attribute name="horizontalHeaderDefaultSectionSize">
-      <number>75</number>
+      <number>220</number>
      </attribute>
      <attribute name="horizontalHeaderMinimumSectionSize">
-      <number>75</number>
+      <number>220</number>
      </attribute>
      <attribute name="horizontalHeaderShowSortIndicator" stdset="0">
       <bool>false</bool>

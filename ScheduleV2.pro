@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui xml
+QT       += core gui xml printsupport
 QT += widgets
 TARGET = ScheduleV2
 TEMPLATE = app
@@ -31,23 +31,24 @@ SOURCES += \
         mainwindow.cpp \
     xmlparser.cpp \
     catalogsform.cpp \
-    sheduleform.cpp
+    scheduleform.cpp
 
 HEADERS += \
         mainwindow.h \
     items.h \
     xmlparser.h \
     catalogsform.h \
-    sheduleform.h
+    scheduleform.h
 
 FORMS += \
         mainwindow.ui \
     catalogsform.ui \
-    sheduleform.ui
+    scheduleform.ui
 
 
 RESOURCES += \
     icons.qrc
+
 
 
 

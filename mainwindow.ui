@@ -54,9 +54,9 @@
         <string>Списки</string>
        </attribute>
       </widget>
-      <widget class="SheduleForm" name="ScheduleTab">
+      <widget class="ScheduleForm" name="ScheduleTab">
        <attribute name="title">
-        <string>Расписание</string>
+        <string>Расписание аудиторий</string>
        </attribute>
       </widget>
      </widget>
@@ -69,7 +69,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>21</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu">
@@ -164,9 +164,9 @@
    <container>1</container>
   </customwidget>
   <customwidget>
-   <class>SheduleForm</class>
+   <class>ScheduleForm</class>
    <extends>QWidget</extends>
-   <header>sheduleform.h</header>
+   <header>scheduleform.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

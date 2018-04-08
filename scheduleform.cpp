@@ -1,19 +1,19 @@
-#include "sheduleform.h"
-#include "ui_sheduleform.h"
+#include "scheduleform.h"
+#include "ui_scheduleform.h"
 
-SheduleForm::SheduleForm(QWidget *parent) :
+ScheduleForm::ScheduleForm(QWidget *parent) :
     QWidget(parent),
-    ui(new Ui::SheduleForm)
+    ui(new Ui::ScheduleForm)
 {
     ui->setupUi(this);
 }
 
-SheduleForm::~SheduleForm()
+ScheduleForm::~ScheduleForm()
 {
     delete ui;
 }
 
-void SheduleForm::loadShedule(XMLParser *parser_)
+void ScheduleForm::loadSchedule(XMLParser *parser_)
 {
     this->parser = parser_;
     for (QHash<int,Items::RoomObj>::iterator i = parser->getRooms()->begin(); i != parser->getRooms()->end(); ++i)
@@ -40,7 +40,7 @@ void SheduleForm::loadShedule(XMLParser *parser_)
 
 }
 
-void SheduleForm::updateTable()
+void ScheduleForm::updateTable()
 {
     for(int i = 0; i < ui->ScheduleTable->rowCount(); i++)
     {
@@ -50,6 +50,7 @@ void SheduleForm::updateTable()
             ui->ScheduleTable->item(i,j)->setText("");
         }
     }
+    ui->ScheduleTable->reset();
 
     int roomId = 0;
 
@@ -81,23 +82,32 @@ void SheduleForm::updateTable()
             sumInfo = sumInfo.left(sumInfo.length()-2);
             sumInfo += "\n";
             Items::TeacherObj teacherObj = parser->getTeachers()->value(load.groups[0].teacherId);
-            sumInfo += teacherObj.surname + " " + teacherObj.firstName + "." + teacherObj.secondName + ". \n";            
+            sumInfo += teacherObj.surname + " " + teacherObj.firstName + "." + teacherObj.secondName + ". \n";
             QString subject = parser->getSubjects()->value(load.groups[0].subjectId).fullName;
             sumInfo += subject;
             ui->ScheduleTable->item(i.value().day-1,i.value().hour-1)->setText(sumInfo);
             ui->ScheduleTable->item(i.value().day-1,i.value().hour-1)->setBackground(Qt::red);
         }
     }
+    for(int i = 0; i < ui->ScheduleTable->rowCount(); i++)
+    {
+        for(int j = 0; j < ui->ScheduleTable->columnCount(); j++)
+        {
+            if(ui->ScheduleTable->item(i,j-1) != nullptr)
+                if(ui->ScheduleTable->item(i,j-1)->text() == ui->ScheduleTable->item(i,j)->text() && !ui->ScheduleTable->item(i,j)->text().isEmpty())
+                    ui->ScheduleTable->setSpan(i,j-1,1,2);
+        }
+    }
 }
 
 
-void SheduleForm::on_RoomsComboBox_currentIndexChanged(int index)
+void ScheduleForm::on_RoomsComboBox_currentIndexChanged(int index)
 {
     if(loaded)
         updateTable();
 }
 
-void SheduleForm::on_WeekComboBox_currentIndexChanged(int index)
+void ScheduleForm::on_WeekComboBox_currentIndexChanged(int index)
 {
     if(loaded)
         updateTable();

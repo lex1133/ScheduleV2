@@ -33,7 +33,7 @@ void MainWindow::OpenProject()
                 curProject = fileName;
                 ui->centralWidget->setEnabled(true);
                 ui->CatalogsTab->loadCatalogs(&parser);
-                ui->ScheduleTab->loadShedule(&parser);
+                ui->ScheduleTab->loadSchedule(&parser);
                 int i = 0;
             }
         }

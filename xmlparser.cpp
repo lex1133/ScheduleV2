@@ -78,6 +78,11 @@ Items::HolidaysObj *XMLParser::getHolidays()
     return &holidays;
 }
 
+QHash<int, Items::StudyTypeObj> *XMLParser::getStudyTypes()
+{
+    return &studyTypes;
+}
+
 QHash<int, Items::ChairObj>* XMLParser::getChairs()
 {
     return &chairs;

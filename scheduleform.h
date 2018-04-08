@@ -1,5 +1,5 @@
-#ifndef SHEDULEFORM_H
-#define SHEDULEFORM_H
+#ifndef SCHEDULEFORM_H
+#define SCHEDULEFORM_H
 
 #include "xmlparser.h"
 #include "items.h"
@@ -11,17 +11,17 @@
 
 
 namespace Ui {
-class SheduleForm;
+class ScheduleForm;
 }
 
-class SheduleForm : public QWidget
+class ScheduleForm : public QWidget
 {
     Q_OBJECT
 
 public:
-    explicit SheduleForm(QWidget *parent = 0);
-    ~SheduleForm();
-    void loadShedule(XMLParser* parser_);
+    explicit ScheduleForm(QWidget *parent = 0);
+    ~ScheduleForm();
+    void loadSchedule(XMLParser* parser_);
     void updateTable();
 
 private slots:
@@ -33,7 +33,7 @@ private slots:
 private:
     QDate beginDate;
     QDate endDate;
-    Ui::SheduleForm *ui;
+    Ui::ScheduleForm *ui;
     XMLParser* parser;
     bool loaded = false;
     struct schedInfo
@@ -46,4 +46,4 @@ private:
     };
 };
 
-#endif // SHEDULEFORM_H
+#endif // ScheduleFORM_H

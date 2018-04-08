@@ -19,6 +19,7 @@ public:
     Items::TermObj* getTerm();
     Items::TimesObj* getTimes();
     Items::HolidaysObj* getHolidays();
+    QHash<int,Items::StudyTypeObj>* getStudyTypes();
     QHash<int,Items::ChairObj>* getChairs();
     QHash<int,Items::TeacherObj>* getTeachers();
     QHash<int,Items::RoomObj>* getRooms();

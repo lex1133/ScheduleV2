@@ -6,6 +6,9 @@
 
 #include <QWidget>
 #include <QDebug>
+#include <QPrinter>
+#include <QPainter>
+#include <QDate>
 
 namespace Ui {
 class CatalogsForm;
@@ -28,6 +31,9 @@ private:
     void loadRooms();
     void loadSubjects();
     void loadClasses();
+    void drawClassSched(QPainter &painter, QList<int> &verts, QList<int> &hors, QString className);
+    void drawSchedule(QPainter &painter,QRect pageRect, QString type, int row);
+    void drawRotatedText(QPainter &painter, int x, int y, int width, int height, const QString &text);
 
 private slots:
 
@@ -38,6 +44,7 @@ private slots:
     void on_TeachersSearchLine_textEdited(const QString &arg1);
     void on_ChairsSearchLine_textEdited(const QString &arg1);
     void on_ChairsSearchInCombo_currentIndexChanged(int index);
+    void on_CatalogsClassesTable_cellDoubleClicked(int row, int column);
 };
 
 #endif // CATALOGSFORM_H
