@@ -53,6 +53,7 @@ void ScheduleForm::updateTable()
         }
     }
     ui->ScheduleTable->reset();
+    ui->ScheduleTable->clearSpans();
 
     int roomId = 0;
 

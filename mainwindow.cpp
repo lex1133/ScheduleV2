@@ -34,7 +34,6 @@ void MainWindow::OpenProject()
                 ui->centralWidget->setEnabled(true);
                 ui->CatalogsTab->loadCatalogs(&parser);
                 ui->ScheduleTab->loadSchedule(&parser);
-                int i = 0;
             }
         }
     }

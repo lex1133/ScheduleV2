@@ -1,6 +1,7 @@
 #ifndef CATALOGSFORM_H
 #define CATALOGSFORM_H
 
+
 #include "items.h"
 #include "xmlparser.h"
 
@@ -9,6 +10,8 @@
 #include <QPrinter>
 #include <QPainter>
 #include <QDate>
+#include <QScreen>
+#include <math.h>
 
 namespace Ui {
 class CatalogsForm;

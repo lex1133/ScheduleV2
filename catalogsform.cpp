@@ -321,6 +321,23 @@ void CatalogsForm::drawClassSched(QPainter &painter, QList<int> &verts, QList<in
         int type;
         QString group;
         int groupsNum;
+        bool operator==(SubInfo const &right)
+        {
+            return (this->name == right.name && this->teacher == right.teacher && this->room == right.room &&
+                    this->type == right.type && this->group == right.group &&
+                    this->groupsNum == right.groupsNum);
+        }
+
+        void clear()
+        {
+            name.clear();
+            teacher.clear();
+            room.clear();
+            dates.clear();
+            type = NULL;
+            group.clear();
+            groupsNum = NULL;
+        }
         SubInfo() {}
     };
     QVector<QVector<QList<SubInfo>>> schedObj;
@@ -351,9 +368,7 @@ void CatalogsForm::drawClassSched(QPainter &painter, QList<int> &verts, QList<in
             bool f = false;
             for(int sub = 0; sub < schedObj[i.value().day-1][i.value().hour-1].size(); sub++)
             {
-                if(schedObj[i.value().day-1][i.value().hour-1][sub].name == tmp.name && schedObj[i.value().day-1][i.value().hour-1][sub].type == tmp.type
-                        && schedObj[i.value().day-1][i.value().hour-1][sub].teacher == tmp.teacher && schedObj[i.value().day-1][i.value().hour-1][sub].room == tmp.room &&
-                        schedObj[i.value().day-1][i.value().hour-1][sub].group == tmp.group)
+                if(schedObj[i.value().day-1][i.value().hour-1][sub] == tmp)
                 {
                     schedObj[i.value().day-1][i.value().hour-1][sub].dates.push_back(tmp.dates[0]);
                     f = true;
@@ -363,53 +378,77 @@ void CatalogsForm::drawClassSched(QPainter &painter, QList<int> &verts, QList<in
                 schedObj[i.value().day-1][i.value().hour-1].push_back(tmp);
         }
     }
+    QFont f;
+    QTextOption opt;
+    double dpi = QGuiApplication::primaryScreen()->physicalDotsPerInch();
 
     for(int i = 0; i < schedObj.size(); i++)
     {
         for(int j = 0; j < schedObj[i].size(); j++)
         {
-            QString dayInfo;
-            dayInfo.clear();
 
-            for(int k = 0; k < schedObj[i][j].size(); k++)
-            {
-
-                std::sort(schedObj[i][j][k].dates.begin(),schedObj[i][j][k].dates.end(),
-                [](const QPair<QDate,QDate>& x,const QPair<QDate,QDate>& y) -> bool
-                {
-                    return x.first < y.first;
-                }
-                );
-                dayInfo += schedObj[i][j][k].name + "." + schedObj[i][j][k].teacher + " " + parser->getStudyTypes()->value(schedObj[i][j][k].type).fullName
-                        + (schedObj[i][j][k].type == 2 ?(schedObj[i][j][k].groupsNum > 1 ? (schedObj[i][j][k].group == 1 ? " (Б) " : " (А) ") : ""): "") + ". " + schedObj[i][j][k].room + ". " + "[";
-                for(int date = 0; date < schedObj[i][j][k].dates.size(); date++)
-                {
-                    if(schedObj[i][j][k].dates[date].first.toString("dd.MM") != schedObj[i][j][k].dates[date].second.toString("dd.MM"))
-                        dayInfo += schedObj[i][j][k].dates[date].first.toString("dd.MM") + " - " + schedObj[i][j][k].dates[date].second.toString("dd.MM");
-                    else
-                        dayInfo += schedObj[i][j][k].dates[date].first.toString("dd.MM");
-                    if(date != schedObj[i][j][k].dates.size() -1)
-                        dayInfo += ",";
-                }
-                dayInfo += "]\n";
-            }
-
-
-            QFont f;
             int daySize = schedObj[i][j].size();
             if(daySize == 1)
-                f = QFont("Arial",13*0.55);
+                f = QFont("Arial",13*0.50);
             else if(daySize == 2)
                 f = QFont("Arial",13*0.45);
             else if(daySize > 2 && daySize < 5)
                 f = QFont("Arial",13*0.40);
             else if(daySize >= 5)
-                f = QFont("Arial",13*0.30);
+                f = QFont("Arial",12*0.35);
             painter.setFont(f);
-            QTextOption opt;
             opt.setWrapMode(QTextOption::WrapAtWordBoundaryOrAnywhere);
             opt.setAlignment(Qt::AlignLeft);
-            painter.drawText(QRect(verts[1+j]+10,hors[1+i]+10,verts[2+j]-verts[1+j]-20,hors[2+i]-hors[1+i]-20),dayInfo, opt);
+
+            QFontMetrics fm(f);
+            int lastRect = 0;
+            for(int k = 0; k < schedObj[i][j].size(); k++)
+            {
+                if(!schedObj[i][j][k].name.isEmpty())
+                {
+                    QString curSub;
+                    curSub.clear();
+                    std::sort(schedObj[i][j][k].dates.begin(),schedObj[i][j][k].dates.end(),
+                              [](const QPair<QDate,QDate>& x,const QPair<QDate,QDate>& y) -> bool
+                    {
+                        return x.first < y.first;
+                    }
+                    );
+                    curSub += schedObj[i][j][k].name + "." + schedObj[i][j][k].teacher + " " + parser->getStudyTypes()->value(schedObj[i][j][k].type).fullName
+                            + (schedObj[i][j][k].type == 2 ?(schedObj[i][j][k].groupsNum > 1 ? (schedObj[i][j][k].group == 1 ? " (Б) " : " (А) ") : ""): "") + ". " + schedObj[i][j][k].room + ". " + "[";
+                    for(int date = 0; date < schedObj[i][j][k].dates.size(); date++)
+                    {
+                        if(schedObj[i][j][k].dates[date].first.toString("dd.MM") != schedObj[i][j][k].dates[date].second.toString("dd.MM"))
+                            curSub += schedObj[i][j][k].dates[date].first.toString("dd.MM") + " - " + schedObj[i][j][k].dates[date].second.toString("dd.MM");
+                        else
+                            curSub += schedObj[i][j][k].dates[date].first.toString("dd.MM");
+                        if(date != schedObj[i][j][k].dates.size() -1)
+                            curSub += ",";
+                    }
+                    curSub += "]";
+                    if(schedObj[i][j][k].type == 2)
+                    {
+                        schedObj[i][j+1][k].clear();
+                        auto br = fm.tightBoundingRect(curSub);
+                        painter.drawText(QRect(verts[1+j]+10,hors[1+i]+10+lastRect,verts[2+j+1]-verts[1+j]-20,hors[2+i]-hors[1+i]-20+lastRect),Qt::AlignLeft | Qt::TextWordWrap,curSub,&br);
+                        painter.drawLine(verts[1+j],hors[1+i],verts[j+1],hors[2+i]);
+                        painter.drawLine(verts[2+j+1],hors[1+i],verts[2+j+1],hors[2+i]);
+                        lastRect += br.height();
+                    }
+                    else
+                    {
+
+                        auto br = fm.tightBoundingRect(curSub);
+                        painter.drawText(QRect(verts[1+j]+10,hors[1+i]+10+lastRect,verts[2+j]-verts[1+j]-20,hors[2+i]-hors[1+i]-20+lastRect),Qt::AlignLeft | Qt::TextWordWrap,curSub,&br);
+                        painter.drawLine(verts[1+j],hors[1+i],verts[j+1],hors[2+i]);
+                        painter.drawLine(verts[1+j+1],hors[1+i],verts[1+j+1],hors[2+i]);
+                        lastRect += br.height();
+                    }
+                }
+            }
+
+
+
 
         }
     }
