@@ -340,7 +340,7 @@ void CatalogsForm::drawClassSched(QPainter &painter, QList<int> &verts, QList<in
         }
         SubInfo() {}
     };
-    QVector<QVector<QList<SubInfo>>> schedObj;
+    QVector<QVector<QVector<SubInfo>>> schedObj;
     schedObj.resize(6);
     for(int i = 0; i < 6; i++)
         schedObj[i].resize(8);
@@ -428,21 +428,28 @@ void CatalogsForm::drawClassSched(QPainter &painter, QList<int> &verts, QList<in
                     curSub += "]";
                     if(schedObj[i][j][k].type == 2)
                     {
-                        schedObj[i][j+1][k].clear();
+                        if(schedObj[i][j+1].size()-1 >= k)
+                            schedObj[i][j+1][k].clear();
                         auto br = fm.tightBoundingRect(curSub);
                         painter.drawText(QRect(verts[1+j]+10,hors[1+i]+10+lastRect,verts[2+j+1]-verts[1+j]-20,hors[2+i]-hors[1+i]-20+lastRect),Qt::AlignLeft | Qt::TextWordWrap,curSub,&br);
-                        painter.drawLine(verts[1+j],hors[1+i],verts[j+1],hors[2+i]);
-                        painter.drawLine(verts[2+j+1],hors[1+i],verts[2+j+1],hors[2+i]);
                         lastRect += br.height();
+                        auto prePen = painter.pen();
+                        painter.setPen(QPen(Qt::black,4));
+                        br.setWidth(verts[2+j+1]-verts[1+j]);
+                        painter.drawRect(br);
+                        painter.setPen(prePen);
                     }
                     else
                     {
 
                         auto br = fm.tightBoundingRect(curSub);
                         painter.drawText(QRect(verts[1+j]+10,hors[1+i]+10+lastRect,verts[2+j]-verts[1+j]-20,hors[2+i]-hors[1+i]-20+lastRect),Qt::AlignLeft | Qt::TextWordWrap,curSub,&br);
-                        painter.drawLine(verts[1+j],hors[1+i],verts[j+1],hors[2+i]);
-                        painter.drawLine(verts[1+j+1],hors[1+i],verts[1+j+1],hors[2+i]);
                         lastRect += br.height();
+                        auto prePen = painter.pen();
+                        painter.setPen(QPen(Qt::black,4));
+                        br.setWidth(verts[1+j+1]-verts[1+j]);
+                        painter.drawRect(br);
+                        painter.setPen(prePen);
                     }
                 }
             }
