@@ -51,6 +51,7 @@ private slots:
     void on_ChairsSearchLine_textEdited(const QString &arg1);
     void on_ChairsSearchInCombo_currentIndexChanged(int index);
     void on_CatalogsClassesTable_cellDoubleClicked(int row, int column);
+    void on_pushButton_clicked();
 };
 
 #endif // CATALOGSFORM_H
