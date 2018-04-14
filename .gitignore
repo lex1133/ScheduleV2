@@ -9,9 +9,14 @@
 *.so
 *.dll
 *.dylib
-
+/.vs
 # Qt-es
-
+/debug
+/release
+/x64
+/x86
+/GeneratedFiles
+*.vc*
 object_script.*.Release
 object_script.*.Debug
 *_plugin_import.cpp
@@ -45,3 +50,5 @@ target_wrapper.*
 # QtCtreator CMake
 CMakeLists.txt.user*
 
+*.sln
+ScheduleV2_resource.rc

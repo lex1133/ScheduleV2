@@ -5,12 +5,14 @@
 #include "items.h"
 #include "xmlparser.h"
 
+#include <QProgressDialog>
 #include <QWidget>
 #include <QDebug>
 #include <QPrinter>
 #include <QPainter>
 #include <QDate>
 #include <QScreen>
+#include <QDir>
 #include <math.h>
 
 namespace Ui {
@@ -37,10 +39,7 @@ private:
     void drawClassSched(QPainter &painter, QList<int> &verts, QList<int> &hors, QString className);
     void drawSchedule(QPainter &painter,QRect pageRect, QString type, int row);
     void drawRotatedText(QPainter &painter, int x, int y, int width, int height, const QString &text);
-    static bool compare(const QPair<QDate,QDate> &x, const QPair<QDate,QDate> &y)
-    {
-        return x.first < y.first;
-    }
+
 private slots:
 
     void on_CatalogsChairsTable_cellDoubleClicked(int row, int column);
@@ -51,7 +50,7 @@ private slots:
     void on_ChairsSearchLine_textEdited(const QString &arg1);
     void on_ChairsSearchInCombo_currentIndexChanged(int index);
     void on_CatalogsClassesTable_cellDoubleClicked(int row, int column);
-    void on_pushButton_clicked();
+    void on_ExportAllClassesButton_clicked();
 };
 
 #endif // CATALOGSFORM_H

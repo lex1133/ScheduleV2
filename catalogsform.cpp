@@ -165,13 +165,14 @@ void CatalogsForm::on_TeachersSearchLine_textEdited(const QString &arg1)
     {
         bool match = false;
 
+
         QTableWidgetItem *item = ui->CatalogsTeachersTable->item( i, 0 );
         if( search.contains(item))
         {
             match = true;
         }
-
         ui->CatalogsTeachersTable->setRowHidden( i, !match );
+
     }
 }
 
@@ -206,15 +207,16 @@ void CatalogsForm::on_CatalogsClassesTable_cellDoubleClicked(int row, int column
     printer.setColorMode(QPrinter::GrayScale);
     printer.setOrientation(QPrinter::Landscape);
     printer.setPageSize(QPrinter::A4);
-    printer.setOutputFileName(ui->CatalogsClassesTable->item(row,0)->text() + ".pdf");
+    QDir tmp;
+    tmp.mkpath(QString(std::getenv("userprofile")) + "\\Documents\\Расписание\\Группы\\");
+    printer.setOutputFileName(QString(std::getenv("userprofile")) + "\\Documents\\Расписание\\Группы\\" + ui->CatalogsClassesTable->item(row,0)->text() + ".pdf");
     QPainter painter;
     if(!painter.begin(&printer))
     {
         qWarning("Falied");
+        return;
     }
     drawSchedule(painter, printer.pageRect(),"class",row);
-
-
     painter.end();
 }
 
@@ -321,11 +323,18 @@ void CatalogsForm::drawClassSched(QPainter &painter, QList<int> &verts, QList<in
         int type;
         QString group;
         int groupsNum;
-        int lastRect;
-        bool operator==(SubInfo const &right)
+        bool pair = false;
+        bool equal(SubInfo const &right)
         {
             return (this->name == right.name && this->teacher == right.teacher && this->room == right.room &&
                     this->type == right.type && this->group == right.group &&
+                    this->groupsNum == right.groupsNum);
+        }
+
+        bool operator==(SubInfo const &right)
+        {
+            return (this->name == right.name && this->teacher == right.teacher && this->room == right.room &&
+                    this->dates == right.dates && this->type == right.type && this->group == right.group &&
                     this->groupsNum == right.groupsNum);
         }
 
@@ -337,8 +346,8 @@ void CatalogsForm::drawClassSched(QPainter &painter, QList<int> &verts, QList<in
             dates.clear();
             type = NULL;
             group.clear();
+            pair = false;
             groupsNum = NULL;
-            lastRect = 0;
         }
         SubInfo() {}
     };
@@ -373,9 +382,15 @@ void CatalogsForm::drawClassSched(QPainter &painter, QList<int> &verts, QList<in
             bool f = false;
             for(int sub = 0; sub < schedObj[i.value().day-1][i.value().hour-1].second.size(); sub++)
             {
-                if(schedObj[i.value().day-1][i.value().hour-1].second[sub] == tmp)
+                if(schedObj[i.value().day-1][i.value().hour-1].second[sub].equal(tmp))
                 {
                     schedObj[i.value().day-1][i.value().hour-1].second[sub].dates.push_back(tmp.dates[0]);
+                    std::sort(schedObj[i.value().day-1][i.value().hour-1].second[sub].dates.begin(),schedObj[i.value().day-1][i.value().hour-1].second[sub].dates.end(),
+                            [](const QPair<QDate,QDate>& x,const QPair<QDate,QDate>& y) -> bool
+                    {
+                        return x.first < y.first;
+                    }
+                    );
                     f = true;
                 }
             }
@@ -387,35 +402,76 @@ void CatalogsForm::drawClassSched(QPainter &painter, QList<int> &verts, QList<in
     QTextOption opt;
     for(int i = 0; i < schedObj.size(); i++)
     {
+        for(int j = 0; j < schedObj[i].size()-1; j++)
+        {
+            for(int k = 0; k < schedObj[i][j].second.size(); k++)
+            {
+                if(schedObj[i][j].second[k].type == 2)
+                {
+                    for(int p = 0; p < schedObj[i][j+1].second.size(); p++)
+                    {
+                        auto first = schedObj[i][j+1].second[p];
+                        auto second = schedObj[i][j].second[k];
+                        bool eq = first == second;
+                        if(eq)
+                        {
+                            schedObj[i][j+1].second[p].pair = true;
+                            schedObj[i][j].second[k].pair = true;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    for(int i = 0; i < schedObj.size(); i++)
+    {
         for(int j = 0; j < schedObj[i].size(); j++)
         {
-
+            std::sort(schedObj[i][j].second.begin(),schedObj[i][j].second.end(),
+                      [](const SubInfo& x,const SubInfo& y) -> bool
+            {
+                if(x.pair == false)
+                    return false;
+                if(x.type == 1 && y.type == 2)
+                    return false;
+                if(x.type == 2 && y.type == 1)
+                    return true;
+                if(x.type == 2 && y.type == 3)
+                    return true;
+                if(x.type == 3 && y.type == 2)
+                    return false;
+                return true;
+            }
+            );
             int daySize = schedObj[i][j].second.size();
             if(daySize == 1)
                 f = QFont("Arial",13*0.50);
             else if(daySize == 2)
                 f = QFont("Arial",13*0.45);
             else if(daySize > 2 && daySize < 5)
-                f = QFont("Arial",13*0.40);
+                f = QFont("Arial",12*0.40);
             else if(daySize >= 5)
                 f = QFont("Arial",12*0.35);
+            else if(schedObj[i][j].first > (hors[2]-hors[1])/3 && daySize > 2 && daySize < 4)
+                f = QFont("Arial",12*0.35);
+            else if(schedObj[i][j].first > (hors[2]-hors[1])/3 && daySize >= 4)
+                f = QFont("Arial",12*0.25);
+            else if(schedObj[i][j].first > (hors[2]-hors[1])/2 && daySize >= 3)
+                f = QFont("Arial",12*0.25);
+
             painter.setFont(f);
             opt.setWrapMode(QTextOption::WrapAtWordBoundaryOrAnywhere);
             opt.setAlignment(Qt::AlignLeft);
 
-            QFontMetrics fm(f);
             for(int k = 0; k < schedObj[i][j].second.size(); k++)
             {
                 if(!schedObj[i][j].second[k].name.isEmpty())
                 {
+
                     QString curSub;
                     curSub.clear();
-                    std::sort(schedObj[i][j].second[k].dates.begin(),schedObj[i][j].second[k].dates.end(),
-                              [](const QPair<QDate,QDate>& x,const QPair<QDate,QDate>& y) -> bool
-                    {
-                        return x.first < y.first;
-                    }
-                    );
+
+
                     curSub += schedObj[i][j].second[k].name + "." + schedObj[i][j].second[k].teacher + " " + parser->getStudyTypes()->value(schedObj[i][j].second[k].type).fullName
                             + (schedObj[i][j].second[k].type == 2 ?(schedObj[i][j].second[k].groupsNum > 1 ? (schedObj[i][j].second[k].group == 1 ? " (Б) " : " (А) ") : ""): "") + ". " + schedObj[i][j].second[k].room + ". " + "[";
                     for(int date = 0; date < schedObj[i][j].second[k].dates.size(); date++)
@@ -428,33 +484,45 @@ void CatalogsForm::drawClassSched(QPainter &painter, QList<int> &verts, QList<in
                             curSub += ",";
                     }
                     curSub += "]";
-                    if(schedObj[i][j].second[k].type == 2)
+                    if(curSub != ". . . []")
                     {
 
-                        auto br = fm.tightBoundingRect(curSub);
-                        painter.drawText(QRect(verts[1+j]+10,hors[1+i]+10+schedObj[i][j].first,verts[3]-verts[1]-20,hors[2]-hors[1]-20+schedObj[i][j].first),Qt::AlignLeft | Qt::TextWordWrap,curSub,&br);
-                        schedObj[i][j].first += br.height();
-                        if(schedObj[i].size()-1 >= j+1)
-                        if(schedObj[i][j+1].second.size()-1 >= k)
+                        QRect br;
+                        QRect drawArea;
+                        bool complex = false;
+                        if(schedObj[i].size() > j+1)
                         {
-                            schedObj[i][j+1].second[k].clear();
-                            schedObj[i][j+1].first += br.height();
+                            for(int p = 0; p < schedObj[i][j+1].second.size(); p++)
+                            {
+                                auto first = schedObj[i][j+1].second[p];
+                                auto second = schedObj[i][j].second[k];
+                                bool eq = first == second;
+                                if(eq && schedObj[i][j].second[k].type == 2)
+                                {
+                                    complex = true;
+                                    schedObj[i][j+1].second[p].clear();
+                                    drawArea = QRect(verts[1+j]+10,hors[1+i]+10+schedObj[i][j].first,verts[3]-verts[1]-20,hors[2]-hors[1]-20+schedObj[i][j].first);
+                                    break;
+                                }
+                            }
                         }
-                        auto prePen = painter.pen();
-                        painter.setPen(QPen(Qt::black,4));
-                        br.setWidth(verts[3]-verts[1]);
-                        painter.drawRect(br);
-                        painter.setPen(prePen);
-                    }
-                    else
-                    {
+                        if(!complex)
+                        {
+                            drawArea = QRect(verts[1+j]+10,hors[1+i]+10+schedObj[i][j].first,verts[2]-verts[1]-20,hors[2]-hors[1]-20+schedObj[i][j].first);
+                        }
 
-                        auto br = fm.tightBoundingRect(curSub);
-                        painter.drawText(QRect(verts[1+j]+10,hors[1+i]+10+schedObj[i][j].first,verts[2]-verts[1]-20,hors[2]-hors[1]-20+schedObj[i][j].first),Qt::AlignLeft | Qt::TextWordWrap,curSub,&br);
+
+                        painter.drawText(drawArea,Qt::AlignTop | Qt::AlignLeft | Qt::TextWordWrap,curSub,&br);
                         schedObj[i][j].first += br.height();
+
+                        if(schedObj[i].size()-1 >= j+1 && complex)
+                            schedObj[i][j+1].first = schedObj[i][j].first;
                         auto prePen = painter.pen();
                         painter.setPen(QPen(Qt::black,4));
-                        br.setWidth(verts[1+j+1]-verts[1+j]);
+                        if(complex)
+                            br.setWidth(verts[3]-verts[1]);
+                        else
+                            br.setWidth(verts[2]-verts[1]);
                         painter.drawRect(br);
                         painter.setPen(prePen);
                     }
@@ -479,18 +547,23 @@ void CatalogsForm::drawRotatedText(QPainter &painter, int x, int y, int width, i
 }
 
 
-
-void CatalogsForm::on_pushButton_clicked()
+void CatalogsForm::on_ExportAllClassesButton_clicked()
 {
-
+    QProgressDialog progress("Сохранение расписаний", "Стоп", 0, ui->CatalogsClassesTable->rowCount(), this);
+    progress.setWindowModality(Qt::WindowModal);
     for(int i = 0; i < ui->CatalogsClassesTable->rowCount(); i++)
     {
+        if (progress.wasCanceled())
+            break;
+        progress.setValue(i);
         QPrinter printer(QPrinter::HighResolution);
         printer.setOutputFormat(QPrinter::PdfFormat);
         printer.setColorMode(QPrinter::GrayScale);
         printer.setOrientation(QPrinter::Landscape);
         printer.setPageSize(QPrinter::A4);
-        printer.setOutputFileName(ui->CatalogsClassesTable->item(i,0)->text() + ".pdf");
+        QDir tmp;
+        tmp.mkpath(QString(std::getenv("userprofile")) + "\\Documents\\Расписание\\Группы\\");
+        printer.setOutputFileName(QString(std::getenv("userprofile")) + "\\Documents\\Расписание\\Группы\\" + ui->CatalogsClassesTable->item(i,0)->text() + ".pdf");
         QPainter painter;
         if(!painter.begin(&printer))
         {
@@ -499,4 +572,6 @@ void CatalogsForm::on_pushButton_clicked()
         drawSchedule(painter, printer.pageRect(),"class",i);
         painter.end();
     }
+
+    progress.setValue(ui->CatalogsClassesTable->rowCount());
 }
