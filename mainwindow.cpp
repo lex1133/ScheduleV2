@@ -18,7 +18,7 @@ MainWindow::~MainWindow()
 void MainWindow::OpenProject()
 {
     auto fileName = QFileDialog::getOpenFileName(this,
-                                                 tr("Открыть расписание"), QString(std::getenv("userprofile")) + "\\Documents\\" , tr("XML файл (*.xml)"));
+                                                 tr("Открыть расписание"), "" , tr("XML файл (*.xml)"));
     if(!fileName.isEmpty())
     {
         QFile* file = new QFile(fileName);
@@ -43,7 +43,7 @@ bool MainWindow::SaveProject(QString fileName)
 {
     if(fileName.isEmpty())
         fileName = QFileDialog::getSaveFileName(this,
-                                                tr("Сохранить расписание"), QString(std::getenv("userprofile")) + "\\Documents\\", tr("XML файл (*.xml)"));
+                                                tr("Сохранить расписание"), "", tr("XML файл (*.xml)"));
     if(!fileName.isEmpty())
     {
         return true;

@@ -8,6 +8,7 @@
 #include <QXmlStreamAttribute>
 #include <QMessageBox>
 #include <QDebug>
+#include <QFile>
 
 
 class XMLParser

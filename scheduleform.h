@@ -3,6 +3,7 @@
 
 #include "xmlparser.h"
 #include "items.h"
+#include "bookaudienceform.h"
 
 #include <QWidget>
 #include <QDebug>
@@ -23,6 +24,7 @@ public:
     ~ScheduleForm();
     void loadSchedule(XMLParser* parser_);
     void updateTable();
+    QVector<QVector<QVector<QPair<QString,QString>>>> reserved;
 
 private slots:
 
@@ -30,12 +32,19 @@ private slots:
 
     void on_WeekComboBox_currentIndexChanged(int index);
 
+    void on_Multimedia_stateChanged(int arg1);
+
+    void on_capacity_editingFinished();
+
+    void on_ScheduleTable_cellDoubleClicked(int row, int column);
+
 private:
     QDate beginDate;
     QDate endDate;
     Ui::ScheduleForm *ui;
     XMLParser* parser;
     bool loaded = false;
+
     struct schedInfo
     {
         QString className;

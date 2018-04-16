@@ -15,8 +15,8 @@ TEMPLATE = app
 RC_ICONS = Icon.ico
 VERSION = 0.0.0.1
 QMAKE_TARGET_COMPANY = "lex1133's Software"
-QMAKE_TARGET_PRODUCT = "Программа для печати расписания МГТУ ВО 'СТАНКИН'"
-QMAKE_TARGET_DESCRIPTION = "Программа для печати расписания МГТУ ВО 'СТАНКИН'"
+QMAKE_TARGET_PRODUCT = "пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅ 'пїЅпїЅпїЅпїЅпїЅпїЅпїЅ'"
+QMAKE_TARGET_DESCRIPTION = "пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅ 'пїЅпїЅпїЅпїЅпїЅпїЅпїЅ'"
 QMAKE_TARGET_COPYRIGHT = "Copyright"
 
 DEFINES += QT_DEPRECATED_WARNINGS
@@ -32,19 +32,22 @@ SOURCES += \
         mainwindow.cpp \
     xmlparser.cpp \
     catalogsform.cpp \
-    scheduleform.cpp
+    scheduleform.cpp \
+    bookaudienceform.cpp
 
 HEADERS += \
         mainwindow.h \
     items.h \
     xmlparser.h \
     catalogsform.h \
-    scheduleform.h
+    scheduleform.h \
+    bookaudienceform.h
 
 FORMS += \
         mainwindow.ui \
     catalogsform.ui \
-    scheduleform.ui
+    scheduleform.ui \
+    bookaudienceform.ui
 
 
 RESOURCES += \

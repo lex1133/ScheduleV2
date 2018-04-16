@@ -207,9 +207,10 @@ void CatalogsForm::on_CatalogsClassesTable_cellDoubleClicked(int row, int column
     printer.setColorMode(QPrinter::GrayScale);
     printer.setOrientation(QPrinter::Landscape);
     printer.setPageSize(QPrinter::A4);
-    QDir tmp;
-    tmp.mkpath(QString(std::getenv("userprofile")) + "\\Documents\\Расписание\\Группы\\");
-    printer.setOutputFileName(QString(std::getenv("userprofile")) + "\\Documents\\Расписание\\Группы\\" + ui->CatalogsClassesTable->item(row,0)->text() + ".pdf");
+    QDir d;
+    if(!d.exists("..\\Расписание\\Группы\\"))
+        d.mkpath("..\\Расписание\\Группы\\");
+    printer.setOutputFileName("..\\Расписание\\Группы\\" + ui->CatalogsClassesTable->item(row,0)->text() + ".pdf");
     QPainter painter;
     if(!painter.begin(&printer))
     {
@@ -233,6 +234,9 @@ void CatalogsForm::drawSchedule(QPainter &painter,QRect pageRect, QString type, 
     QPen pen;
     pen.setWidth(15);
     painter.setPen(pen);
+    QVector<QString> hours {"8:30 - 10:10","10:20 - 12:00", "12:20 - 14:00", "14:10 - 15:50", "16:00 - 17:40", "18:00 - 19:30", "19:40 - 21:10", "21:20 - 22:50"};
+    QVector<QString> daynamesFull {"Понедельник","Вторник","Среда","Четверг","Пятница","Суббота"};
+    QFont f = QFont("Arial",v*0.65);
 
     verts.append(30 * v);
     verts.append(verts.last() + 15*v);
@@ -264,8 +268,7 @@ void CatalogsForm::drawSchedule(QPainter &painter,QRect pageRect, QString type, 
         painter.drawLine(verts[j], hors[0], verts[j], hors[1]);
     }
 
-    QVector<QString> hours {"8:30 - 10:10","10:20 - 12:00", "12:20 - 14:00", "14:10 - 15:50", "16:00 - 17:40", "18:00 - 19:30", "19:40 - 21:10", "21:20 - 22:50"};
-    QFont f = QFont("Arial",v*0.65);
+
     painter.setFont(f);
 
     for (int i = 0; i < hours.size(); i++)
@@ -278,7 +281,6 @@ void CatalogsForm::drawSchedule(QPainter &painter,QRect pageRect, QString type, 
 
     }
 
-    QVector<QString> daynamesFull {"Понедельник","Вторник","Среда","Четверг","Пятница","Суббота"};
     for (int i = 0; i < daynamesFull.size(); i++)
     {
         int h = i + 2;
@@ -314,43 +316,7 @@ void CatalogsForm::drawClassSched(QPainter &painter, QList<int> &verts, QList<in
             break;
         }
     }
-    struct SubInfo
-    {
-        QString name;
-        QString teacher;
-        QString room;
-        QVector<QPair<QDate,QDate>> dates;
-        int type;
-        QString group;
-        int groupsNum;
-        bool pair = false;
-        bool equal(SubInfo const &right)
-        {
-            return (this->name == right.name && this->teacher == right.teacher && this->room == right.room &&
-                    this->type == right.type && this->group == right.group &&
-                    this->groupsNum == right.groupsNum);
-        }
 
-        bool operator==(SubInfo const &right)
-        {
-            return (this->name == right.name && this->teacher == right.teacher && this->room == right.room &&
-                    this->dates == right.dates && this->type == right.type && this->group == right.group &&
-                    this->groupsNum == right.groupsNum);
-        }
-
-        void clear()
-        {
-            name.clear();
-            teacher.clear();
-            room.clear();
-            dates.clear();
-            type = NULL;
-            group.clear();
-            pair = false;
-            groupsNum = NULL;
-        }
-        SubInfo() {}
-    };
     QVector<QVector<QPair<int,QVector<SubInfo>>>> schedObj;
     schedObj.resize(6);
     for(int i = 0; i < 6; i++)
@@ -362,23 +328,24 @@ void CatalogsForm::drawClassSched(QPainter &painter, QList<int> &verts, QList<in
             SubInfo tmp;
             QDate beginDate = QDate::fromString(i.value().beginDate,"dd.MM.yyyy");
             QDate endDate = QDate::fromString(i.value().endDate,"dd.MM.yyyy");
-            QString subject = parser->getSubjects()->value(parser->getLoads()->value(i.value().loadId).groups[0].subjectId).fullName;
+            Items::LoadObj load = parser->getLoads()->value(i.value().loadId);
+            QString subject = parser->getSubjects()->value(load.groups[0].subjectId).fullName;
             tmp.name = subject;
-            tmp.type = parser->getLoads()->value(i.value().loadId).groups[0].studyTypeId;
-            tmp.groupsNum = parser->getLoads()->value(i.value().loadId).groups.size();
-            Items::TeacherObj teacherObj = parser->getTeachers()->value(parser->getLoads()->value(i.value().loadId).groups[0].teacherId);
+            tmp.type = load.groups[0].studyTypeId;
+            tmp.groupsNum = load.groups.size();
+            Items::TeacherObj teacherObj = parser->getTeachers()->value(load.groups[0].teacherId);
             if(teacherObj.surname[0] != '_' && teacherObj.surname[0] != '=')
-                tmp.teacher = teacherObj.surname + " " + teacherObj.firstName + "." + teacherObj.secondName + ".";
+                tmp.teacher = teacherObj.surname + " " + teacherObj.firstName[0] + "." + teacherObj.secondName[0] + ".";
             if(parser->getLoads()->value(i.value().loadId).groups[0].roomIdList.size() > 0)
             {
-                Items::RoomObj roomObj = parser->getRooms()->value(parser->getLoads()->value(i.value().loadId).groups[0].roomIdList[0]);
+                Items::RoomObj roomObj = parser->getRooms()->value(load.groups[0].roomIdList[0]);
                 tmp.room = roomObj.name;
             }
             QPair<QDate, QDate> date;
             date.first = beginDate.addDays(i.value().day-1);
             date.second = endDate.addDays(-(6-(i.value().day-1)));
             tmp.dates.push_back(date);
-            tmp.group = i.value().group;
+            tmp.group = QString::number(i.value().group);
             bool f = false;
             for(int sub = 0; sub < schedObj[i.value().day-1][i.value().hour-1].second.size(); sub++)
             {
@@ -399,7 +366,6 @@ void CatalogsForm::drawClassSched(QPainter &painter, QList<int> &verts, QList<in
         }
     }
     QFont f;
-    QTextOption opt;
     for(int i = 0; i < schedObj.size(); i++)
     {
         for(int j = 0; j < schedObj[i].size()-1; j++)
@@ -443,8 +409,36 @@ void CatalogsForm::drawClassSched(QPainter &painter, QList<int> &verts, QList<in
                 return true;
             }
             );
+
+            if(schedObj[i][j].second.size() > 0)
+            {
+
+                painter.drawLine(verts[1+j],hors[1+i]+schedObj[i][j].first+10,verts[1+j],hors[2+i]);
+                if(schedObj[i][j].second[0].type == 2 && schedObj[i][j].second[0].pair == true)
+                {
+                    if(schedObj[i].size()-1 >= j+2)
+                        if(schedObj[i][j+2].second.size() == 0)
+                            if(verts.size() > 3+j)
+                                painter.drawLine(verts[3+j],hors[1+i],verts[3+j],hors[2+i]);
+                }
+                else
+                {
+                    if(verts.size() > 2+j)
+                        painter.drawLine(verts[2+j],hors[1+i],verts[2+j],hors[2+i]);
+                }
+            }
             int daySize = schedObj[i][j].second.size();
-            if(daySize == 1)
+            if(schedObj[i][j].first > (hors[2]-hors[1])/3 && daySize > 2 && daySize < 4)
+                f = QFont("Arial",12*0.35);
+            else if(schedObj[i][j].first > (hors[2]-hors[1])/3 && daySize >= 4)
+                f = QFont("Arial",12*0.25);
+            else if(schedObj[i][j].first > (hors[2]-hors[1])/2 && daySize >= 3)
+                f = QFont("Arial",12*0.25);
+            else if(schedObj[i][j].first > (hors[2]-hors[1])/2 && daySize == 1)
+                f = QFont("Arial",13*0.35);
+            else if(schedObj[i][j].first > (hors[2]-hors[1])/2 && daySize == 2)
+                f = QFont("Arial",13*0.25);
+            else if(daySize == 1)
                 f = QFont("Arial",13*0.50);
             else if(daySize == 2)
                 f = QFont("Arial",13*0.45);
@@ -452,32 +446,32 @@ void CatalogsForm::drawClassSched(QPainter &painter, QList<int> &verts, QList<in
                 f = QFont("Arial",12*0.40);
             else if(daySize >= 5)
                 f = QFont("Arial",12*0.35);
-            else if(schedObj[i][j].first > (hors[2]-hors[1])/3 && daySize > 2 && daySize < 4)
-                f = QFont("Arial",12*0.35);
-            else if(schedObj[i][j].first > (hors[2]-hors[1])/3 && daySize >= 4)
-                f = QFont("Arial",12*0.25);
-            else if(schedObj[i][j].first > (hors[2]-hors[1])/2 && daySize >= 3)
-                f = QFont("Arial",12*0.25);
+
 
             painter.setFont(f);
-            opt.setWrapMode(QTextOption::WrapAtWordBoundaryOrAnywhere);
-            opt.setAlignment(Qt::AlignLeft);
+
 
             for(int k = 0; k < schedObj[i][j].second.size(); k++)
             {
                 if(!schedObj[i][j].second[k].name.isEmpty())
                 {
-
+                    if(k == 0 && schedObj[i][j].first != 0)
+                    {
+                        painter.drawLine(verts[2+j],hors[1+i],verts[2+j],hors[1+i]+schedObj[i][j].first+10);
+                        painter.drawLine(verts[2+j],hors[1+i]+schedObj[i][j].first+10,verts[j],hors[1+i]+schedObj[i][j].first+10);
+                        if(schedObj[i][j].second[k].type == 2 && schedObj[i][j].second[k].pair == true)
+                            painter.drawLine(verts[2+j],hors[1+i]+schedObj[i][j].first+10,verts[j+3],hors[1+i]+schedObj[i][j].first+10);
+                    }
                     QString curSub;
                     curSub.clear();
 
 
                     curSub += schedObj[i][j].second[k].name + "." + schedObj[i][j].second[k].teacher + " " + parser->getStudyTypes()->value(schedObj[i][j].second[k].type).fullName
-                            + (schedObj[i][j].second[k].type == 2 ?(schedObj[i][j].second[k].groupsNum > 1 ? (schedObj[i][j].second[k].group == 1 ? " (Б) " : " (А) ") : ""): "") + ". " + schedObj[i][j].second[k].room + ". " + "[";
+                            + (schedObj[i][j].second[k].type == 2 ?(schedObj[i][j].second[k].groupsNum > 1 ? (schedObj[i][j].second[k].group == QString::number(1) ? " (Б) " : " (А) ") : ""): "") + ". " + schedObj[i][j].second[k].room + ". " + "[";
                     for(int date = 0; date < schedObj[i][j].second[k].dates.size(); date++)
                     {
                         if(schedObj[i][j].second[k].dates[date].first.toString("dd.MM") != schedObj[i][j].second[k].dates[date].second.toString("dd.MM"))
-                            curSub += schedObj[i][j].second[k].dates[date].first.toString("dd.MM") + " - " + schedObj[i][j].second[k].dates[date].second.toString("dd.MM");
+                            curSub += schedObj[i][j].second[k].dates[date].first.toString("dd.MM") + " - " + schedObj[i][j].second[k].dates[date].second.toString("dd.MM") + " к.н.";
                         else
                             curSub += schedObj[i][j].second[k].dates[date].first.toString("dd.MM");
                         if(date != schedObj[i][j].second[k].dates.size() -1)
@@ -500,7 +494,7 @@ void CatalogsForm::drawClassSched(QPainter &painter, QList<int> &verts, QList<in
                                 if(eq && schedObj[i][j].second[k].type == 2)
                                 {
                                     complex = true;
-                                    schedObj[i][j+1].second[p].clear();
+                                    schedObj[i][j+1].second.removeAt(p);
                                     drawArea = QRect(verts[1+j]+10,hors[1+i]+10+schedObj[i][j].first,verts[3]-verts[1]-20,hors[2]-hors[1]-20+schedObj[i][j].first);
                                     break;
                                 }
@@ -517,14 +511,7 @@ void CatalogsForm::drawClassSched(QPainter &painter, QList<int> &verts, QList<in
 
                         if(schedObj[i].size()-1 >= j+1 && complex)
                             schedObj[i][j+1].first = schedObj[i][j].first;
-                        auto prePen = painter.pen();
-                        painter.setPen(QPen(Qt::black,4));
-                        if(complex)
-                            br.setWidth(verts[3]-verts[1]);
-                        else
-                            br.setWidth(verts[2]-verts[1]);
-                        painter.drawRect(br);
-                        painter.setPen(prePen);
+
                     }
                 }
             }
@@ -546,24 +533,41 @@ void CatalogsForm::drawRotatedText(QPainter &painter, int x, int y, int width, i
     painter.restore();
 }
 
+QFont CatalogsForm::fillRect(QString& str,QRect &rect, int flags, QFont &font)
+{
+    QFont result = font;
+    QPainter painter(this);
+    painter.setFont(result);
+    QRect br;
+    while(br.height() > rect.height())
+    {
+        painter.drawText(rect,flags | Qt::TextDontPrint,str,&br);
+        result.setPointSizeF(result.pointSizeF()*0.95);
+        painter.setFont(result);
+    }
+    return result;
+}
+
 
 void CatalogsForm::on_ExportAllClassesButton_clicked()
 {
-    QProgressDialog progress("Сохранение расписаний", "Стоп", 0, ui->CatalogsClassesTable->rowCount(), this);
+    QProgressDialog progress("Сохранение расписаний","Стоп", 0, ui->CatalogsClassesTable->rowCount(), this);
     progress.setWindowModality(Qt::WindowModal);
     for(int i = 0; i < ui->CatalogsClassesTable->rowCount(); i++)
     {
         if (progress.wasCanceled())
             break;
         progress.setValue(i);
+        progress.setLabelText("Сохранение расписаний " + QString::number(i+1) + "/" + QString::number(ui->CatalogsClassesTable->rowCount()));
         QPrinter printer(QPrinter::HighResolution);
         printer.setOutputFormat(QPrinter::PdfFormat);
         printer.setColorMode(QPrinter::GrayScale);
         printer.setOrientation(QPrinter::Landscape);
         printer.setPageSize(QPrinter::A4);
-        QDir tmp;
-        tmp.mkpath(QString(std::getenv("userprofile")) + "\\Documents\\Расписание\\Группы\\");
-        printer.setOutputFileName(QString(std::getenv("userprofile")) + "\\Documents\\Расписание\\Группы\\" + ui->CatalogsClassesTable->item(i,0)->text() + ".pdf");
+        QDir d;
+        if(!d.exists("..\\Расписание\\Группы\\"))
+            d.mkpath("..\\Расписание\\Группы\\");
+        printer.setOutputFileName("..\\Расписание\\Группы\\" + ui->CatalogsClassesTable->item(i,0)->text() + ".pdf");
         QPainter painter;
         if(!painter.begin(&printer))
         {

@@ -2,6 +2,8 @@
 #define ITEMS_H
 #include <QString>
 #include <QList>
+#include <QVector>
+#include <QString>
 
 namespace Items {
 
