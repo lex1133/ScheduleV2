@@ -95,7 +95,8 @@ void ScheduleForm::updateTable()
                 sumInfo = sumInfo.left(sumInfo.length()-2);
                 sumInfo += "\n";
                 Items::TeacherObj teacherObj = parser->getTeachers()->value(load.groups[0].teacherId);
-                sumInfo += teacherObj.surname + " " + teacherObj.firstName + "." + teacherObj.secondName + ". \n";
+                if(teacherObj.surname[0] != '_' && teacherObj.surname[0] != '=')
+                    sumInfo += teacherObj.surname + " " + teacherObj.firstName + "." + teacherObj.secondName + ". \n";
                 QString subject = parser->getSubjects()->value(load.groups[0].subjectId).fullName;
                 sumInfo += subject + ". ";
                 sumInfo += parser->getStudyTypes()->value(load.groups[0].studyTypeId).fullName;
