@@ -13,62 +13,141 @@ CatalogsForm::~CatalogsForm()
     delete ui;
 }
 
-void CatalogsForm::loadCatalogs(XMLParser *parser_)
+bool CatalogsForm::loadCatalogs(QSqlDatabase* db_,QSqlQuery* query_)
 {
-    this->parser = parser_;
+    this->db = db_;
+    this->query = query_;
+    db->transaction();
     loadChairs();
+    if(!loadResult)
+    {
+        return false;
+    }
     loadTeachers();
+    if(!loadResult)
+    {
+        return false;
+    }
     loadRooms();
+    if(!loadResult)
+    {
+        return false;
+    }
     loadSubjects();
+    if(!loadResult)
+    {
+        return false;
+    }
     loadClasses();
+    if(!loadResult)
+    {
+        return false;
+    }
+    db->commit();
+    query->finish();
+    return loadResult;
 }
 
 void CatalogsForm::loadChairs()
 {
-    ui->CatalogsChairsTable->setRowCount(parser->getChairs()->size());
-    for (QHash<int,Items::ChairObj>::iterator i = parser->getChairs()->begin(); i != parser->getChairs()->end(); ++i)
+    if(!query->exec("SELECT * FROM `Chairs`"))
     {
-        ui->CatalogsChairsTable->setItem(i.key(),0, new QTableWidgetItem(i.value().fullName));
-        ui->CatalogsChairsTable->setItem(i.key(),1, new QTableWidgetItem(i.value().shortName));
+        qDebug()<<"Chairs query error!";
+        loadResult = false;
+        return;
+    }
+    int numberOfRows = 0;
+    if(query->last())
+    {
+        numberOfRows =  query->at() + 1;
+        query->first();
+        query->previous();
+    }
+    ui->CatalogsChairsTable->setRowCount(numberOfRows);
+    while (query->next()) {
+        ui->CatalogsChairsTable->setItem(query->value(0).toInt(),0, new QTableWidgetItem(query->value(1).toString()));
+        ui->CatalogsChairsTable->setItem(query->value(0).toInt(),1, new QTableWidgetItem(query->value(2).toString()));
     }
 }
 
 void CatalogsForm::loadTeachers()
 {
-    ui->CatalogsTeachersTable->setRowCount(parser->getTeachers()->size());
-
-    for (QHash<int,Items::TeacherObj>::iterator i = parser->getTeachers()->begin(); i != parser->getTeachers()->end(); ++i)
+    if(!query->exec("SELECT * FROM `Teachers`"))
     {
-        ui->CatalogsTeachersTable->setItem(i.key(),0, new QTableWidgetItem(i.value().surname + " " + i.value().firstName + ". " + i.value().secondName + "."));
-        if(i.value().chairId != -1)
+        qDebug()<<"Teachers query error!";
+        loadResult = false;
+        return;
+    }
+    int numberOfRows = 0;
+    if(query->last())
+    {
+        numberOfRows =  query->at() + 1;
+        query->first();
+        query->previous();
+    }
+    ui->CatalogsTeachersTable->setRowCount(numberOfRows);
+    while (query->next()) {
+        ui->CatalogsTeachersTable->setItem(query->value(0).toInt(),0, new QTableWidgetItem(query->value(1).toString() + " " + query->value(2).toString()[0] + ". " + query->value(3).toString()[0] + "."));
+        if(query->value(4).toInt() != -1)
         {
-            ui->CatalogsTeachersTable->setItem(i.key(),1, new QTableWidgetItem(parser->getChairs()->value(i.value().chairId).fullName));
+            QSqlQuery tmp = QSqlQuery();
+            tmp.prepare("SELECT * FROM `Chairs` WHERE id=:chairId");
+            tmp.bindValue(":chairId", query->value(4).toInt());
+            if(!tmp.exec())
+            {
+                loadResult = false;
+                return;
+            }
+            tmp.next();
+            ui->CatalogsTeachersTable->setItem(query->value(0).toInt(),1, new QTableWidgetItem(tmp.value(1).toString()));
         }
         else
         {
-            ui->CatalogsTeachersTable->setItem(i.key(),1, new QTableWidgetItem("Не определена"));
+            ui->CatalogsTeachersTable->setItem(query->value(0).toInt(),1, new QTableWidgetItem("Не определена"));
         }
-
-
     }
 }
 
 void CatalogsForm::loadRooms()
 {
-    ui->CatalogsRoomsTable->setRowCount(parser->getRooms()->size());
 
-    for (QHash<int,Items::RoomObj>::iterator i = parser->getRooms()->begin(); i != parser->getRooms()->end(); ++i)
+    if(!query->exec("SELECT * FROM `Rooms`"))
     {
-        ui->CatalogsRoomsTable->setItem(i.key(),0, new QTableWidgetItem(i.value().name));
-        ui->CatalogsRoomsTable->setItem(i.key(),1, new QTableWidgetItem(QString::number(i.value().capacity)));
-        if(i.value().chairId != -1)
+        qDebug()<<"Rooms query error!";
+        loadResult = false;
+        return;
+    }
+    int numberOfRows = 0;
+    if(query->last())
+    {
+        numberOfRows =  query->at() + 1;
+        query->first();
+        query->previous();
+    }
+    ui->CatalogsRoomsTable->setRowCount(numberOfRows);
+
+    while (query->next())
+    {
+        ui->CatalogsRoomsTable->setItem(query->value(0).toInt(),0, new QTableWidgetItem(query->value(1).toString()));
+        ui->CatalogsRoomsTable->setItem(query->value(0).toInt(),1, new QTableWidgetItem(QString::number(query->value(2).toInt())));
+        if(query->value(3).toInt() != -1)
         {
-            ui->CatalogsRoomsTable->setItem(i.key(),2, new QTableWidgetItem(parser->getChairs()->value(i.value().chairId).fullName));
+            QSqlQuery tmp = QSqlQuery();
+            tmp.prepare("SELECT * FROM `Chairs` WHERE id=:chairId");
+            tmp.bindValue(":chairId", query->value(4).toInt());
+            if(!tmp.exec())
+            {
+                loadResult = false;
+                return;
+            }
+            tmp.next();
+            ui->CatalogsRoomsTable->setItem(query->value(0).toInt(),2, new QTableWidgetItem(tmp.value(1).toString()));
         }
         else
         {
-            ui->CatalogsRoomsTable->setItem(i.key(),2, new QTableWidgetItem("Не определена"));
+            ui->CatalogsRoomsTable->setItem(query->value(0).toInt(),2, new QTableWidgetItem("Не определена"));
         }
+
 
 
     }
@@ -76,27 +155,52 @@ void CatalogsForm::loadRooms()
 
 void CatalogsForm::loadSubjects()
 {
-    ui->CatalogsSubjectsTable->setRowCount(parser->getSubjects()->size());
 
-    for (QHash<int,Items::SubjectObj>::iterator i = parser->getSubjects()->begin(); i != parser->getSubjects()->end(); ++i)
+    if(!query->exec("SELECT * FROM `Subjects`"))
     {
-        ui->CatalogsSubjectsTable->setItem(i.key(),0, new QTableWidgetItem(i.value().fullName));
-        ui->CatalogsSubjectsTable->setItem(i.key(),1, new QTableWidgetItem(i.value().shortName));
+        qDebug()<<"Subjects query error!";
+        loadResult = false;
+        return;
+    }
+    int numberOfRows = 0;
+    if(query->last())
+    {
+        numberOfRows =  query->at() + 1;
+        query->first();
+        query->previous();
+    }
+    ui->CatalogsSubjectsTable->setRowCount(numberOfRows);
+    while (query->next())
+    {
+        ui->CatalogsSubjectsTable->setItem(query->value(0).toInt(),0, new QTableWidgetItem(query->value(2).toString()));
+        ui->CatalogsSubjectsTable->setItem(query->value(0).toInt(),1, new QTableWidgetItem(query->value(1).toString()));
 
     }
 }
 
 void CatalogsForm::loadClasses()
 {
-    ui->CatalogsClassesTable->setRowCount(parser->getClasses()->size());
-
-    for (QHash<int,Items::ClassObj>::iterator i = parser->getClasses()->begin(); i != parser->getClasses()->end(); ++i)
+    if(!query->exec("SELECT * FROM `Classes`"))
     {
-        ui->CatalogsClassesTable->setItem(i.key(),0, new QTableWidgetItem(i.value().name));
-        ui->CatalogsClassesTable->setItem(i.key(),1, new QTableWidgetItem(QString::number(i.value().students)));
-        ui->CatalogsClassesTable->setItem(i.key(),2, new QTableWidgetItem(QString::number(i.value().semester)));
-
+        qDebug()<<"Classes query error!";
+        loadResult = false;
+        return;
     }
+    int numberOfRows = 0;
+    if(query->last())
+    {
+        numberOfRows =  query->at() + 1;
+        query->first();
+        query->previous();
+    }
+    ui->CatalogsClassesTable->setRowCount(numberOfRows);
+    while (query->next())
+    {
+        ui->CatalogsClassesTable->setItem(query->value(0).toInt(),0, new QTableWidgetItem(query->value(1).toString()));
+        ui->CatalogsClassesTable->setItem(query->value(0).toInt(),1, new QTableWidgetItem(QString::number(query->value(2).toInt())));
+        ui->CatalogsClassesTable->setItem(query->value(0).toInt(),2, new QTableWidgetItem(QString::number(query->value(3).toInt())));
+    }
+
 }
 
 
@@ -202,6 +306,8 @@ void CatalogsForm::on_ChairsSearchInCombo_currentIndexChanged(int index)
 
 void CatalogsForm::on_CatalogsClassesTable_cellDoubleClicked(int row, int column)
 {
+    QTime timer;
+    timer.start();
     QPrinter printer(QPrinter::HighResolution);
     printer.setOutputFormat(QPrinter::PdfFormat);
     printer.setColorMode(QPrinter::GrayScale);
@@ -217,8 +323,13 @@ void CatalogsForm::on_CatalogsClassesTable_cellDoubleClicked(int row, int column
         qWarning("Falied");
         return;
     }
+
     drawSchedule(painter, printer.pageRect(),"class",row);
+
     painter.end();
+
+
+    qDebug()<<"Time elapsed: "<<timer.elapsed();
 }
 
 void CatalogsForm::drawSchedule(QPainter &painter,QRect pageRect, QString type, int row)
@@ -294,77 +405,318 @@ void CatalogsForm::drawSchedule(QPainter &painter,QRect pageRect, QString type, 
         title = ui->CatalogsClassesTable->item(row,0)->text();
     else if(type == "room")
         title = ui->CatalogsRoomsTable->item(row,0)->text();
+    else if(type == "teacher")
+        title = ui->CatalogsTeachersTable->item(row,0)->text();
     painter.drawText(verts[0], 20 * v,
             verts[verts.size() - 1] - verts[0], 40 *v,
             Qt::AlignVCenter | Qt::AlignCenter,
             title);
     if(type == "class")
         drawClassSched(painter, verts, hors, ui->CatalogsClassesTable->item(row,0)->text());
+    if(type == "teacher")
+        drawTeacherSched(painter, verts, hors, row);
 
 }
 
 
 void CatalogsForm::drawClassSched(QPainter &painter, QList<int> &verts, QList<int> &hors, QString className)
 {
-
+    db->transaction();
     int classId = 0;
-    for (QHash<int,Items::ClassObj>::iterator i = parser->getClasses()->begin(); i != parser->getClasses()->end(); ++i)
+    query->prepare("SELECT * FROM `Classes` WHERE name=:name");
+    query->bindValue(":name",className);
+    if(!query->exec())
     {
-        if(i.value().name == className)
-        {
-            classId = i.key();
-            break;
-        }
+        qDebug()<<"Scheds query error!";
+        loadResult = false;
+        return;
+    }
+    int numberOfRows = 0;
+    if(query->last())
+    {
+        numberOfRows =  query->at() + 1;
+        query->first();
+        query->previous();
+    }
+    if(numberOfRows != 0)
+    {
+        query->next();
+        classId = query->value(0).toInt();
     }
 
     QVector<QVector<QPair<int,QVector<SubInfo>>>> schedObj;
     schedObj.resize(6);
     for(int i = 0; i < 6; i++)
         schedObj[i].resize(8);
-    for (QHash<int,Items::SchedObj>::iterator i = parser->getScheds()->begin(); i != parser->getScheds()->end(); ++i)
+    query->prepare("SELECT * FROM `Scheds` WHERE loadId IN (select id from `Loads` where klassIdList like '% " + QString::number(classId) +" %')");
+    if(!query->exec())
     {
-        if(parser->getLoads()->value(i.value().loadId).klassIdList.contains(classId))
-        {
-            SubInfo tmp;
-            QDate beginDate = QDate::fromString(i.value().beginDate,"dd.MM.yyyy");
-            QDate endDate = QDate::fromString(i.value().endDate,"dd.MM.yyyy");
-            Items::LoadObj load = parser->getLoads()->value(i.value().loadId);
-            QString subject = parser->getSubjects()->value(load.groups[0].subjectId).fullName;
-            tmp.name = subject;
-            tmp.type = load.groups[0].studyTypeId;
-            tmp.groupsNum = load.groups.size();
-            Items::TeacherObj teacherObj = parser->getTeachers()->value(load.groups[0].teacherId);
-            if(teacherObj.surname[0] != '_' && teacherObj.surname[0] != '=')
-                tmp.teacher = teacherObj.surname + " " + teacherObj.firstName[0] + "." + teacherObj.secondName[0] + ".";
-            if(parser->getLoads()->value(i.value().loadId).groups[0].roomIdList.size() > 0)
-            {
-                Items::RoomObj roomObj = parser->getRooms()->value(load.groups[0].roomIdList[0]);
-                tmp.room = roomObj.name;
-            }
-            QPair<QDate, QDate> date;
-            date.first = beginDate.addDays(i.value().day-1);
-            date.second = endDate.addDays(-(6-(i.value().day-1)));
-            tmp.dates.push_back(date);
-            tmp.group = QString::number(i.value().group);
-            bool f = false;
-            for(int sub = 0; sub < schedObj[i.value().day-1][i.value().hour-1].second.size(); sub++)
-            {
-                if(schedObj[i.value().day-1][i.value().hour-1].second[sub].equal(tmp))
-                {
-                    schedObj[i.value().day-1][i.value().hour-1].second[sub].dates.push_back(tmp.dates[0]);
-                    std::sort(schedObj[i.value().day-1][i.value().hour-1].second[sub].dates.begin(),schedObj[i.value().day-1][i.value().hour-1].second[sub].dates.end(),
-                            [](const QPair<QDate,QDate>& x,const QPair<QDate,QDate>& y) -> bool
-                    {
-                        return x.first < y.first;
-                    }
-                    );
-                    f = true;
-                }
-            }
-            if(!f)
-                schedObj[i.value().day-1][i.value().hour-1].second.push_back(tmp);
-        }
+        qDebug()<<"Scheds query error!";
+        loadResult = false;
+        return;
     }
+    while (query->next())
+    {
+        QSqlQuery LoadObj = QSqlQuery();
+        LoadObj.prepare("SELECT * FROM `Loads` WHERE id=:loadId");
+        LoadObj.bindValue(":loadId",query->value(4));
+        if(!LoadObj.exec())
+        {
+            qDebug()<<"Load query error!";
+            loadResult = false;
+            return;
+        }
+        LoadObj.next();
+
+        SubInfo tmp;
+        QDate beginDate = QDate::fromString(query->value(6).toString(),"dd.MM.yyyy");
+        QDate endDate = QDate::fromString(query->value(7).toString(),"dd.MM.yyyy");
+
+        QSqlQuery LoadGroupObj = QSqlQuery();
+        LoadGroupObj.prepare("SELECT * FROM `LoadGroups` WHERE loadId=:loadId");
+        int loadId = query->value(4).toInt();
+        LoadGroupObj.bindValue(":loadId",loadId);
+        if(!LoadGroupObj.exec())
+        {
+            qDebug()<<"LoadGroupObj query error!";
+            loadResult = false;
+            return;
+        }
+        numberOfRows = 0;
+        if(LoadGroupObj.last())
+        {
+            numberOfRows =  LoadGroupObj.at() + 1;
+            LoadGroupObj.first();
+            LoadGroupObj.previous();
+        }
+        LoadGroupObj.next();
+
+        QSqlQuery SubjectObj = QSqlQuery();
+        SubjectObj.prepare("SELECT * FROM `Subjects` WHERE id=:subjectId");
+        SubjectObj.bindValue(":subjectId",LoadGroupObj.value(3));
+        if(!SubjectObj.exec())
+        {
+            qDebug()<<"SubjectObj query error!";
+            loadResult = false;
+            return;
+        }
+        SubjectObj.next();
+
+        QString subject = SubjectObj.value(1).toString();
+        tmp.name = subject;
+        tmp.type = LoadGroupObj.value(5).toInt();
+        tmp.groupsNum = numberOfRows;
+
+        QSqlQuery TeacherObj = QSqlQuery();
+        TeacherObj.prepare("SELECT * FROM `Teachers` WHERE id=:teacherId");
+        TeacherObj.bindValue(":teacherId",LoadGroupObj.value(2).toInt());
+        if(!TeacherObj.exec())
+        {
+            qDebug()<<"TeacherObj query error!";
+            loadResult = false;
+            return;
+        }
+        TeacherObj.next();
+
+        if(TeacherObj.value(1).toString()[0] != '_' && TeacherObj.value(1).toString()[0] != '=')
+            tmp.teacher = TeacherObj.value(1).toString() + " " + TeacherObj.value(2).toString()[0] + "." + TeacherObj.value(3).toString()[0] + ".";
+        if(LoadGroupObj.value(4).toString().size() > 0)
+        {
+
+            QSqlQuery RoomObj = QSqlQuery();
+            RoomObj.prepare("SELECT * FROM `Rooms` WHERE id=:roomId");
+            RoomObj.bindValue(":roomId",LoadGroupObj.value(4).toInt());
+            if(!RoomObj.exec())
+            {
+                qDebug()<<"RoomObj query error!";
+                loadResult = false;
+                return;
+            }
+            RoomObj.next();
+            tmp.room = RoomObj.value(1).toString();
+        }
+
+        QPair<QDate, QDate> date;
+        date.first = beginDate.addDays(query->value(1).toInt()-1);
+        date.second = endDate.addDays(-(6-(query->value(1).toInt()-1)));
+        tmp.dates.push_back(date);
+        tmp.group = QString::number(query->value(3).toInt());
+        bool f = false;
+        for(int sub = 0; sub < schedObj[query->value(1).toInt()-1][query->value(2).toInt()-1].second.size(); sub++)
+        {
+            auto tmp1 = schedObj[query->value(1).toInt()-1][query->value(2).toInt()-1].second[sub];
+            if(tmp1.equal(tmp))
+            {
+                schedObj[query->value(1).toInt()-1][query->value(2).toInt()-1].second[sub].dates.push_back(tmp.dates[0]);
+                std::sort(schedObj[query->value(1).toInt()-1][query->value(2).toInt()-1].second[sub].dates.begin(),schedObj[query->value(1).toInt()-1][query->value(2).toInt()-1].second[sub].dates.end(),
+                        [](const QPair<QDate,QDate>& x,const QPair<QDate,QDate>& y) -> bool
+                {
+                    return x.first < y.first;
+                }
+                );
+                f = true;
+            }
+        }
+        if(!f)
+            schedObj[query->value(1).toInt()-1][query->value(2).toInt()-1].second.push_back(tmp);
+
+
+
+    }
+
+
+    drawSchedTable(painter,verts,hors,schedObj);
+
+
+    db->commit();
+
+}
+
+void CatalogsForm::drawTeacherSched(QPainter &painter, QList<int> &verts, QList<int> &hors, int teacherId)
+{
+    db->transaction();
+    QVector<QVector<QPair<int,QVector<SubInfo>>>> schedObj;
+    schedObj.resize(6);
+    for(int i = 0; i < 6; i++)
+        schedObj[i].resize(8);
+    query->prepare("SELECT * FROM `Scheds` WHERE loadId IN (select loadId from `LoadGroups` where teacherId == "+ QString::number(teacherId) + ")");
+    if(!query->exec())
+    {
+        qDebug()<<"Scheds query error!";
+        loadResult = false;
+        return;
+    }
+    while (query->next())
+    {
+        QSqlQuery LoadObj = QSqlQuery();
+        LoadObj.prepare("SELECT * FROM `Loads` WHERE id=:loadId");
+        LoadObj.bindValue(":loadId",query->value(4));
+        if(!LoadObj.exec())
+        {
+            qDebug()<<"Load query error!";
+            loadResult = false;
+            return;
+        }
+        LoadObj.next();
+
+        SubInfo tmp;
+        QDate beginDate = QDate::fromString(query->value(6).toString(),"dd.MM.yyyy");
+        QDate endDate = QDate::fromString(query->value(7).toString(),"dd.MM.yyyy");
+
+        QSqlQuery LoadGroupObj = QSqlQuery();
+        LoadGroupObj.prepare("SELECT * FROM `LoadGroups` WHERE loadId=:loadId");
+        int loadId = query->value(4).toInt();
+        LoadGroupObj.bindValue(":loadId",loadId);
+        if(!LoadGroupObj.exec())
+        {
+            qDebug()<<"LoadGroupObj query error!";
+            loadResult = false;
+            return;
+        }
+        int numberOfRows = 0;
+        if(LoadGroupObj.last())
+        {
+            numberOfRows =  LoadGroupObj.at() + 1;
+            LoadGroupObj.first();
+            LoadGroupObj.previous();
+        }
+        LoadGroupObj.next();
+
+        QSqlQuery SubjectObj = QSqlQuery();
+        SubjectObj.prepare("SELECT * FROM `Subjects` WHERE id=:subjectId");
+        SubjectObj.bindValue(":subjectId",LoadGroupObj.value(3));
+        if(!SubjectObj.exec())
+        {
+            qDebug()<<"SubjectObj query error!";
+            loadResult = false;
+            return;
+        }
+        SubjectObj.next();
+
+        QString subject = SubjectObj.value(1).toString();
+        tmp.name = subject;
+        tmp.type = LoadGroupObj.value(5).toInt();
+        tmp.groupsNum = numberOfRows;
+
+        QSqlQuery TeacherObj = QSqlQuery();
+        TeacherObj.prepare("SELECT klassIdList FROM `Loads` WHERE id=:loadId");
+        TeacherObj.bindValue(":loadId",query->value(4));
+        if(!TeacherObj.exec())
+        {
+            qDebug()<<"Load query error!";
+            loadResult = false;
+            return;
+        }
+        TeacherObj.next();
+        QStringList gr = TeacherObj.value(0).toString().split(" ");
+        for(int i = 0; i < gr.size(); i++)
+        {
+            if(gr[i] != "")
+            {
+                QSqlQuery GroupObj = QSqlQuery();
+                GroupObj.prepare("SELECT name FROM `Classes` WHERE id=:klassId");
+                GroupObj.bindValue(":klassId",gr[i]);
+                if(!GroupObj.exec())
+                {
+                    qDebug()<<"Group query error!";
+                    loadResult = false;
+                    return;
+                }
+                GroupObj.next();
+                tmp.teacher += GroupObj.value(0).toString() + " ";
+            }
+        }
+        if(LoadGroupObj.value(4).toString().size() > 0)
+        {
+
+            QSqlQuery RoomObj = QSqlQuery();
+            RoomObj.prepare("SELECT * FROM `Rooms` WHERE id=:roomId");
+            RoomObj.bindValue(":roomId",LoadGroupObj.value(4).toInt());
+            if(!RoomObj.exec())
+            {
+                qDebug()<<"RoomObj query error!";
+                loadResult = false;
+                return;
+            }
+            RoomObj.next();
+            tmp.room = RoomObj.value(1).toString();
+        }
+
+        QPair<QDate, QDate> date;
+        date.first = beginDate.addDays(query->value(1).toInt()-1);
+        date.second = endDate.addDays(-(6-(query->value(1).toInt()-1)));
+        tmp.dates.push_back(date);
+        tmp.group = QString::number(query->value(3).toInt());
+        bool f = false;
+        for(int sub = 0; sub < schedObj[query->value(1).toInt()-1][query->value(2).toInt()-1].second.size(); sub++)
+        {
+            auto tmp1 = schedObj[query->value(1).toInt()-1][query->value(2).toInt()-1].second[sub];
+            if(tmp1.equal(tmp))
+            {
+                schedObj[query->value(1).toInt()-1][query->value(2).toInt()-1].second[sub].dates.push_back(tmp.dates[0]);
+                std::sort(schedObj[query->value(1).toInt()-1][query->value(2).toInt()-1].second[sub].dates.begin(),schedObj[query->value(1).toInt()-1][query->value(2).toInt()-1].second[sub].dates.end(),
+                        [](const QPair<QDate,QDate>& x,const QPair<QDate,QDate>& y) -> bool
+                {
+                    return x.first < y.first;
+                }
+                );
+                f = true;
+            }
+        }
+        if(!f)
+            schedObj[query->value(1).toInt()-1][query->value(2).toInt()-1].second.push_back(tmp);
+
+
+
+    }
+    drawSchedTable(painter,verts,hors,schedObj);
+
+    db->commit();
+}
+
+void CatalogsForm::drawSchedTable(QPainter &painter, QList<int> &verts, QList<int> &hors, QVector<QVector<QPair<int, QVector<SubInfo> > > > &schedObj)
+{
+
     QFont f;
     for(int i = 0; i < schedObj.size(); i++)
     {
@@ -389,6 +741,7 @@ void CatalogsForm::drawClassSched(QPainter &painter, QList<int> &verts, QList<in
             }
         }
     }
+
     for(int i = 0; i < schedObj.size(); i++)
     {
         for(int j = 0; j < schedObj[i].size(); j++)
@@ -465,8 +818,19 @@ void CatalogsForm::drawClassSched(QPainter &painter, QList<int> &verts, QList<in
                     QString curSub;
                     curSub.clear();
 
+                    QSqlQuery StudyTypeObj = QSqlQuery();
+                    StudyTypeObj.prepare("SELECT * FROM `StudyTypes` WHERE id=:studyId");
+                    StudyTypeObj.bindValue(":studyId",schedObj[i][j].second[k].type);
+                    if(!StudyTypeObj.exec())
+                    {
+                        qDebug()<<"StudyTypeObj query error!";
+                        loadResult = false;
+                        return;
+                    }
 
-                    curSub += schedObj[i][j].second[k].name + "." + schedObj[i][j].second[k].teacher + " " + parser->getStudyTypes()->value(schedObj[i][j].second[k].type).fullName
+                    StudyTypeObj.next();
+
+                    curSub += schedObj[i][j].second[k].name + "." + schedObj[i][j].second[k].teacher + " " + StudyTypeObj.value(1).toString()
                             + (schedObj[i][j].second[k].type == 2 ?(schedObj[i][j].second[k].groupsNum > 1 ? (schedObj[i][j].second[k].group == QString::number(1) ? " (Б) " : " (А) ") : ""): "") + ". " + schedObj[i][j].second[k].room + ". " + "[";
                     for(int date = 0; date < schedObj[i][j].second[k].dates.size(); date++)
                     {
@@ -521,7 +885,6 @@ void CatalogsForm::drawClassSched(QPainter &painter, QList<int> &verts, QList<in
 
         }
     }
-
 }
 
 void CatalogsForm::drawRotatedText(QPainter &painter, int x, int y, int width, int height, const QString &text)
@@ -551,6 +914,7 @@ QFont CatalogsForm::fillRect(QString& str,QRect &rect, int flags, QFont &font)
 
 void CatalogsForm::on_ExportAllClassesButton_clicked()
 {
+
     QProgressDialog progress("Сохранение расписаний","Стоп", 0, ui->CatalogsClassesTable->rowCount(), this);
     progress.setWindowModality(Qt::WindowModal);
     for(int i = 0; i < ui->CatalogsClassesTable->rowCount(); i++)
@@ -573,9 +937,39 @@ void CatalogsForm::on_ExportAllClassesButton_clicked()
         {
             qWarning("Falied");
         }
+
         drawSchedule(painter, printer.pageRect(),"class",i);
+
         painter.end();
     }
 
     progress.setValue(ui->CatalogsClassesTable->rowCount());
+}
+
+void CatalogsForm::on_CatalogsTeachersTable_cellDoubleClicked(int row, int column)
+{
+    QTime timer;
+    timer.start();
+    QPrinter printer(QPrinter::HighResolution);
+    printer.setOutputFormat(QPrinter::PdfFormat);
+    printer.setColorMode(QPrinter::GrayScale);
+    printer.setOrientation(QPrinter::Landscape);
+    printer.setPageSize(QPrinter::A4);
+    QDir d;
+    if(!d.exists("..\\Расписание\\Преподаватели\\"))
+        d.mkpath("..\\Расписание\\Преподаватели\\");
+    printer.setOutputFileName("..\\Расписание\\Преподаватели\\" + ui->CatalogsTeachersTable->item(row,0)->text() + ".pdf");
+    QPainter painter;
+    if(!painter.begin(&printer))
+    {
+        qWarning("Falied");
+        return;
+    }
+
+    drawSchedule(painter, printer.pageRect(),"teacher",row);
+
+    painter.end();
+
+
+    qDebug()<<"Time elapsed: "<<timer.elapsed();
 }

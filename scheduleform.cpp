@@ -13,18 +13,33 @@ ScheduleForm::~ScheduleForm()
     delete ui;
 }
 
-void ScheduleForm::loadSchedule(XMLParser *parser_)
+bool ScheduleForm::loadSchedule(QSqlDatabase* db_,QSqlQuery* query_)
 {
-    this->parser = parser_;
-    for (QHash<int,Items::RoomObj>::iterator i = parser->getRooms()->begin(); i != parser->getRooms()->end(); ++i)
+    this->db = db_;
+    this->query = query_;
+
+    if(!query->exec("SELECT name FROM `Rooms`"))
     {
-        ui->RoomsComboBox->addItem(i.value().name);
+        qDebug()<<"Rooms query falure";
+        loadResult = false;
+        return false;
+    }
+    while(query->next())
+    {
+        ui->RoomsComboBox->addItem(query->value(0).toString());
     }
     ui->RoomsComboBox->model()->sort(0);
     ui->RoomsComboBox->setCurrentIndex(0);
 
-    beginDate = QDate::fromString(parser->getTerm()->beginDate,"dd.MM.yyyy");
-    endDate = QDate::fromString(parser->getTerm()->endDate,"dd.MM.yyyy");
+    if(!query->exec("SELECT * FROM `Term`"))
+    {
+        qDebug()<<"Term query falure";
+        loadResult = false;
+        return false;
+    }
+    query->next();
+    beginDate = QDate::fromString(query->value(0).toString(),"dd.MM.yyyy");
+    endDate = QDate::fromString(query->value(1).toString(),"dd.MM.yyyy");
     int weeks = ceil(beginDate.daysTo(endDate)/7.0);
     for(int i = 0; i < weeks; i++)
     {
@@ -37,93 +52,209 @@ void ScheduleForm::loadSchedule(XMLParser *parser_)
             ui->ScheduleTable->setItem(i,j, new QTableWidgetItem());
         }
     }
-    reserved.resize(weeks);
-    for(int i = 0; i < weeks; i++)
-    {
-        reserved[i].resize(ui->ScheduleTable->rowCount());
-        for(int j = 0; j < ui->ScheduleTable->rowCount(); j++)
-        {
-            reserved[i][j].resize(ui->ScheduleTable->columnCount());
-        }
-    }
+
     loaded = true;
     updateTable();
+    if(!loadResult)
+    {
+        return false;
+    }
 
+    return loadResult;
 }
 
 void ScheduleForm::updateTable()
 {
-    for(int i = 0; i < ui->ScheduleTable->rowCount(); i++)
+    if(ui->RoomsComboBox->count() > 0)
     {
-        for(int j = 0; j < ui->ScheduleTable->columnCount(); j++)
+        db->transaction();
+        for(int i = 0; i < ui->ScheduleTable->rowCount(); i++)
         {
-            ui->ScheduleTable->item(i,j)->setBackground(Qt::white);
-            ui->ScheduleTable->item(i,j)->setText("");
+            for(int j = 0; j < ui->ScheduleTable->columnCount(); j++)
+            {
+                ui->ScheduleTable->item(i,j)->setBackground(Qt::white);
+                ui->ScheduleTable->item(i,j)->setText("");
+            }
         }
-    }
-    ui->ScheduleTable->reset();
-    ui->ScheduleTable->clearSpans();
+        ui->ScheduleTable->reset();
+        ui->ScheduleTable->clearSpans();
 
-    int roomId = -1;
+        int roomId = -1;
 
-    for (QHash<int,Items::RoomObj>::iterator i = parser->getRooms()->begin(); i != parser->getRooms()->end(); ++i)
-    {
-        if(i.value().name == ui->RoomsComboBox->currentText())
+        query->prepare("SELECT id FROM `Rooms` WHERE name=:roomName");
+        query->bindValue(":roomName",ui->RoomsComboBox->currentText());
+        if(!query->exec())
         {
-            roomId = i.key();
-            break;
+            qDebug()<<"Room query falure";
+            loadResult = false;
+            return;
         }
-    }
-    if(roomId != -1)
-    {
-        for (QHash<int,Items::SchedObj>::iterator i = parser->getScheds()->begin(); i != parser->getScheds()->end(); ++i)
+        query->next();
+        roomId = query->value(0).toInt();
+
+        if(roomId != -1)
         {
+
             QDate curWeekBegin = beginDate.addDays(ui->WeekComboBox->currentIndex()*7);
             QDate curWeekEnd = beginDate.addDays(ui->WeekComboBox->currentIndex()*7).addDays(6);
-            QDate tmp1 = QDate::fromString(i.value().beginDate,"dd.MM.yyyy");
-            QDate tmp2 = QDate::fromString(i.value().endDate,"dd.MM.yyyy");
-            if(i.value().roomId == roomId && tmp1 <= curWeekBegin && tmp2 >= curWeekEnd)
+            query->prepare("SELECT * FROM `Scheds` WHERE beginDate <= :curWeekBegin AND endDate >= :curWeekEnd AND roomId = :roomId");
+            query->bindValue(":curWeekBegin",curWeekBegin.toString("yyyyMMdd"));
+            query->bindValue(":curWeekEnd",curWeekEnd.toString("yyyyMMdd"));
+            query->bindValue(":roomId",roomId);
+            if(!query->exec())
+            {
+                qDebug()<<"Scheds query falure";
+                loadResult = false;
+                return;
+            }
+            while(query->next())
             {
                 QString sumInfo;
                 sumInfo.clear();
-                Items::LoadObj load = parser->getLoads()->value(i.value().loadId);
-                for(int i = 0; i < load.klassIdList.size(); i++)
+                QSqlQuery LoadsObj = QSqlQuery();
+                LoadsObj.prepare("SELECT klassIdList FROM `Loads` WHERE id=:loadId");
+                int loadId = query->value(4).toInt();
+                LoadsObj.bindValue(":loadId",loadId);
+                if(!LoadsObj.exec())
                 {
-                    sumInfo += parser->getClasses()->value(load.klassIdList[i]).name + ", ";
+                    qDebug()<<"LoadsObj query error!";
+                    loadResult = false;
+                    return;
+                }
+                LoadsObj.next();
+                QStringList gr = LoadsObj.value(0).toString().split(" ");
+                for(int i = 0; i < gr.size(); i++)
+                {
+                    if(gr[i] != "")
+                    {
+                        QSqlQuery GroupObj = QSqlQuery();
+                        GroupObj.prepare("SELECT name FROM `Classes` WHERE id=:klassId");
+                        GroupObj.bindValue(":klassId",gr[i]);
+                        if(!GroupObj.exec())
+                        {
+                            qDebug()<<"Group query error!";
+                            loadResult = false;
+                            return;
+                        }
+                        GroupObj.next();
+                        sumInfo += GroupObj.value(0).toString() + " ";
+                    }
                 }
 
                 sumInfo = sumInfo.left(sumInfo.length()-2);
                 sumInfo += "\n";
-                Items::TeacherObj teacherObj = parser->getTeachers()->value(load.groups[0].teacherId);
-                if(teacherObj.surname[0] != '_' && teacherObj.surname[0] != '=')
-                    sumInfo += teacherObj.surname + " " + teacherObj.firstName + "." + teacherObj.secondName + ". \n";
-                QString subject = parser->getSubjects()->value(load.groups[0].subjectId).fullName;
-                sumInfo += subject + ". ";
-                sumInfo += parser->getStudyTypes()->value(load.groups[0].studyTypeId).fullName;
-                ui->ScheduleTable->item(i.value().day-1,i.value().hour-1)->setText(sumInfo);
-                ui->ScheduleTable->item(i.value().day-1,i.value().hour-1)->setBackground(Qt::red);
-            }
-        }
-        for(int i = 0; i < ui->ScheduleTable->rowCount(); i++)
-        {
-            for(int j = 0; j < ui->ScheduleTable->columnCount(); j++)
-            {
-                if(!reserved[ui->WeekComboBox->currentIndex()][i][j].first.isEmpty())
+
+
+                QSqlQuery LoadGroupObj = QSqlQuery();
+                LoadGroupObj.prepare("SELECT * FROM `LoadGroups` WHERE loadId=:loadId");
+                LoadGroupObj.bindValue(":loadId",loadId);
+                if(!LoadGroupObj.exec())
                 {
-                    ui->ScheduleTable->item(i,j)->setText(reserved[ui->WeekComboBox->currentIndex()][i][j].first + "\n" + reserved[ui->WeekComboBox->currentIndex()][i][j].second);
-                    ui->ScheduleTable->item(i,j)->setBackground(Qt::blue);
+                    qDebug()<<"LoadGroupObj query error!";
+                    loadResult = false;
+                    return;
+                }
+                LoadGroupObj.next();
+
+                QSqlQuery TeacherObj = QSqlQuery();
+                TeacherObj.prepare("SELECT * FROM `Teachers` WHERE id=:teacherId");
+                TeacherObj.bindValue(":teacherId",LoadGroupObj.value(2).toInt());
+                if(!TeacherObj.exec())
+                {
+                    qDebug()<<"TeacherObj query error!";
+                    loadResult = false;
+                    return;
+                }
+                TeacherObj.next();
+
+                if(TeacherObj.value(1).toString()[0] != '_' && TeacherObj.value(1).toString()[0] != '=')
+                    sumInfo += TeacherObj.value(1).toString() + " " + TeacherObj.value(2).toString()[0] + "." + TeacherObj.value(3).toString()[0] + ".";
+
+
+                QSqlQuery SubjectObj = QSqlQuery();
+                SubjectObj.prepare("SELECT * FROM `Subjects` WHERE id=:subjectId");
+                SubjectObj.bindValue(":subjectId",LoadGroupObj.value(3));
+                if(!SubjectObj.exec())
+                {
+                    qDebug()<<"SubjectObj query error!";
+                    loadResult = false;
+                    return;
+                }
+                SubjectObj.next();
+
+                QString subject = SubjectObj.value(1).toString();
+                sumInfo += subject + ". ";
+
+                QSqlQuery StudyTypeObj = QSqlQuery();
+                StudyTypeObj.prepare("SELECT * FROM `StudyTypes` WHERE id=:studyId");
+                StudyTypeObj.bindValue(":studyId",LoadGroupObj.value(5));
+                if(!StudyTypeObj.exec())
+                {
+                    qDebug()<<"StudyTypeObj query error!";
+                    loadResult = false;
+                    return;
+                }
+
+                StudyTypeObj.next();
+
+                sumInfo += StudyTypeObj.value(1).toString();
+                ui->ScheduleTable->item(query->value(1).toInt()-1,query->value(2).toInt()-1)->setText(sumInfo);
+                ui->ScheduleTable->item(query->value(1).toInt()-1,query->value(2).toInt()-1)->setBackground(Qt::red);
+            }
+
+
+            for(int i = 0; i < ui->ScheduleTable->rowCount(); i++)
+            {
+                for(int j = 0; j < ui->ScheduleTable->columnCount(); j++)
+                {
+                    query->prepare("SELECT * FROM `Reserved` WHERE room=:room AND week=:week AND day=:day AND hour=:hour");
+                    query->bindValue(":room",roomId);
+                    query->bindValue(":week",ui->WeekComboBox->currentIndex());
+                    query->bindValue(":day",i);
+                    query->bindValue(":hour",j);
+                    if(!query->exec())
+                    {
+                        qDebug()<<"Reserver query falure";
+                        loadResult = false;
+                        return;
+                    }
+                    int numberOfRows = 0;
+                    if(query->last())
+                    {
+                        numberOfRows =  query->at() + 1;
+                        query->first();
+                        query->previous();
+                    }
+                    if(numberOfRows > 0)
+                    {
+                        query->next();
+                        QString teacher = query->value(5).toString();
+                        QString group = query->value(6).toString();
+                        QString reason = query->value(7).toString();
+                        if(!query->value(5).toString().isEmpty())
+                        {
+                            ui->ScheduleTable->item(i,j)->setText(teacher + "\n" + group + "\n" + reason);
+                            ui->ScheduleTable->item(i,j)->setBackground(Qt::blue);
+                        }
+                    }
+
+                }
+            }
+            for(int i = 0; i < ui->ScheduleTable->rowCount(); i++)
+            {
+                for(int j = 0; j < ui->ScheduleTable->columnCount(); j++)
+                {
+                    if(ui->ScheduleTable->item(i,j-1) != nullptr)
+                        if(ui->ScheduleTable->item(i,j-1)->text() == ui->ScheduleTable->item(i,j)->text()
+                                && !ui->ScheduleTable->item(i,j)->text().isEmpty() &&
+                                ui->ScheduleTable->item(i,j)->backgroundColor() != Qt::blue)
+                            ui->ScheduleTable->setSpan(i,j-1,1,2);
                 }
             }
         }
-        for(int i = 0; i < ui->ScheduleTable->rowCount(); i++)
-        {
-            for(int j = 0; j < ui->ScheduleTable->columnCount(); j++)
-            {
-                if(ui->ScheduleTable->item(i,j-1) != nullptr)
-                    if(ui->ScheduleTable->item(i,j-1)->text() == ui->ScheduleTable->item(i,j)->text() && !ui->ScheduleTable->item(i,j)->text().isEmpty())
-                        ui->ScheduleTable->setSpan(i,j-1,1,2);
-            }
-        }
+        db->commit();
+
+        query->finish();
     }
 }
 
@@ -145,24 +276,33 @@ void ScheduleForm::on_Multimedia_stateChanged(int arg1)
 
     if(loaded)
     {
+        loaded = false;
         ui->RoomsComboBox->clear();
+
         if(arg1 == 0)
         {
-            for (QHash<int,Items::RoomObj>::iterator i = parser->getRooms()->begin(); i != parser->getRooms()->end(); ++i)
+            query->prepare("SELECT name FROM `Rooms` WHERE capacity >= :capacity");
+            query->bindValue(":capacity",ui->capacity->value());
+            if(!query->exec())
             {
-                if(i.value().capacity >= ui->capacity->value())
-                    ui->RoomsComboBox->addItem(i.value().name);
+                qDebug()<<"Rooms query falure";
+            }
+            while(query->next())
+            {
+                ui->RoomsComboBox->addItem(query->value(0).toString());
             }
         }
         else if(arg1 == 2)
         {
-            for (QHash<int,Items::RoomObj>::iterator i = parser->getRooms()->begin(); i != parser->getRooms()->end(); ++i)
+            query->prepare("SELECT name FROM `Rooms` WHERE capacity >= :capacity AND chairId IN (SELECT id FROM `Chairs` WHERE shortName == 'ММ')");
+            query->bindValue(":capacity",ui->capacity->value());
+            if(!query->exec())
             {
-                if(parser->getChairs()->value(i.value().chairId).shortName == "ММ"
-                        && i.value().capacity >= ui->capacity->value())
-                {
-                    ui->RoomsComboBox->addItem(i.value().name);
-                }
+                qDebug()<<"Rooms query falure";
+            }
+            while(query->next())
+            {
+                ui->RoomsComboBox->addItem(query->value(0).toString());
             }
         }
 
@@ -172,6 +312,8 @@ void ScheduleForm::on_Multimedia_stateChanged(int arg1)
             ui->RoomsComboBox->setCurrentIndex(0);
         else
             ui->RoomsComboBox->setCurrentIndex(-1);
+
+        loaded = true;
         updateTable();
     }
 }
@@ -180,22 +322,32 @@ void ScheduleForm::on_capacity_editingFinished()
 {
     if(loaded)
     {
+        loaded = false;
         ui->RoomsComboBox->clear();
-        for (QHash<int,Items::RoomObj>::iterator i = parser->getRooms()->begin(); i != parser->getRooms()->end(); ++i)
+        if(ui->Multimedia->isChecked())
         {
-            if(i.value().capacity >= ui->capacity->value())
+            query->prepare("SELECT name FROM `Rooms` WHERE capacity >= :capacity AND chairId IN (SELECT id FROM `Chairs` WHERE shortName == 'ММ')");
+            query->bindValue(":capacity",ui->capacity->value());
+            if(!query->exec())
             {
-                if(ui->Multimedia->isChecked())
-                {
-                    if(parser->getChairs()->value(i.value().chairId).shortName == "ММ")
-                    {
-                        ui->RoomsComboBox->addItem(i.value().name);
-                    }
-                }
-                else
-                {
-                    ui->RoomsComboBox->addItem(i.value().name);
-                }
+                qDebug()<<"Rooms query falure";
+            }
+            while(query->next())
+            {
+                ui->RoomsComboBox->addItem(query->value(0).toString());
+            }
+        }
+        else
+        {
+            query->prepare("SELECT name FROM `Rooms` WHERE capacity >= :capacity");
+            query->bindValue(":capacity",ui->capacity->value());
+            if(!query->exec())
+            {
+                qDebug()<<"Rooms query falure";
+            }
+            while(query->next())
+            {
+                ui->RoomsComboBox->addItem(query->value(0).toString());
             }
         }
         ui->RoomsComboBox->model()->sort(0);
@@ -203,23 +355,42 @@ void ScheduleForm::on_capacity_editingFinished()
             ui->RoomsComboBox->setCurrentIndex(0);
         else
             ui->RoomsComboBox->setCurrentIndex(-1);
+
+        loaded = true;
         updateTable();
     }
+
+
 }
+
 
 void ScheduleForm::on_ScheduleTable_cellDoubleClicked(int row, int column)
 {
     if(ui->ScheduleTable->item(row,column)->text().isEmpty())
     {
         BookAudienceForm* baf = new BookAudienceForm();
-        baf->bookAudience(this,parser,ui->WeekComboBox->currentIndex(),row,column);
+        query->prepare("SELECT id FROM `Rooms` WHERE name=:roomName");
+        query->bindValue(":roomName",ui->RoomsComboBox->currentText());
+        if(!query->exec())
+        {
+            qDebug()<<"Room query falure";
+        }
+        query->next();
+        baf->bookAudience(this,db,query,query->value(0).toInt(),ui->WeekComboBox->currentIndex(),row,column);
         baf->show();
     }
 
     if(ui->ScheduleTable->item(row,column)->backgroundColor() == Qt::blue)
     {
         BookAudienceForm* baf = new BookAudienceForm();
-        baf->editAudience(this,parser,ui->WeekComboBox->currentIndex(),row,column);
+        query->prepare("SELECT id FROM `Rooms` WHERE name=:roomName");
+        query->bindValue(":roomName",ui->RoomsComboBox->currentText());
+        if(!query->exec())
+        {
+            qDebug()<<"Room query falure";
+        }
+        query->next();
+        baf->editAudience(this,this->db,this->query,query->value(0).toInt(),ui->WeekComboBox->currentIndex(),row,column);
         baf->show();
     }
 }

@@ -5,10 +5,59 @@ XMLParser::XMLParser()
 
 }
 
-bool XMLParser::ReadXMLData(QFile* file)
+void XMLParser::GenerateBase()
 {
-    xml.setDevice(file);
+    auto fileName = QFileDialog::getSaveFileName(0,
+                                                 QObject::tr("Сохранить новую базу данных"), "" , QObject::tr("SCDB файл (*.scdb)"));
+    if(!fileName.isEmpty())
+    {
+        QFileInfo check_file(fileName);
+        if (check_file.exists() && check_file.isFile())
+        {
+            QFile::remove(fileName);
+        }
 
+        db = new QSqlDatabase(QSqlDatabase::addDatabase("QSQLITE"));
+        db->setDatabaseName(check_file.absoluteFilePath());
+
+        if (db->open()) {
+            qDebug()<<"[+] Connected to Database File";
+        }
+        else {
+            qDebug()<<"[!] Database File was not opened";
+        }
+
+        query = new QSqlQuery();
+
+
+        query->exec("PRAGMA schema.journal_mode = MEMORY");
+        query->exec("PRAGMA schema.synchronous = OFF");
+        db->transaction();
+        query->exec("CREATE TABLE `Reserved` ( `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, `room` INTEGER NOT NULL, `week` INTEGER NOT NULL, `day` INTEGER NOT NULL, `hour` INTEGER NOT NULL, `teacher` TEXT NOT NULL, `class` TEXT, `reason` TEXT )");
+        query->exec("CREATE TABLE `Chairs` ( `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, `fullName` TEXT NOT NULL, `shortName` TEXT NOT NULL )");
+        query->exec("CREATE TABLE \"Classes\" ( `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, `name` TEXT NOT NULL, `student` INTEGER NOT NULL, `semester` INTEGER NOT NULL, `work_hours` TEXT )");
+        query->exec("CREATE TABLE `Holidays` ( `day` TEXT )");
+        query->exec("CREATE TABLE `Loads` ( `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, `klassIdList` TEXT)");
+        query->exec("CREATE TABLE \"Rooms\" ( `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, `name` TEXT NOT NULL, `capacity` INTEGER NOT NULL, `chairId` INTEGER NOT NULL, `work_hours` TEXT )");
+        query->exec("CREATE TABLE `Scheds` ( `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, `day` INTEGER NOT NULL, `hour` INTEGER NOT NULL, `group` INTEGER NOT NULL, `loadId` INTEGER NOT NULL, `roomId` INTEGER NOT NULL, `beginDate` TEXT NOT NULL, `endDate` TEXT NOT NULL )");
+        query->exec("CREATE TABLE `StudyTypes` ( `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, `fullName` TEXT NOT NULL, `shortName` TEXT NOT NULL )");
+        query->exec("CREATE TABLE `Subjects` ( `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, `fullName` TEXT NOT NULL, `shortName` TEXT NOT NULL )");
+        query->exec("CREATE TABLE \"Teachers\" ( `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, `surname` TEXT NOT NULL, `firstName` TEXT, `secondName` TEXT, `chairId` INTEGER, `work_hours` TEXT )");
+        query->exec("CREATE TABLE `Term` ( `beginDate` TEXT NOT NULL, `endDate` TEXT NOT NULL )");
+        query->exec("CREATE TABLE `Times` ( `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, `time` TEXT NOT NULL )");
+        query->exec("CREATE TABLE `LoadGroups` ( `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,`loadId` INTEGER NOT NULL, `teacherId` INTEGER NOT NULL, `subjectId` INTEGER NOT NULL, `roomIdList` TEXT, `studyTypeId` INTEGER NOT NULL )");
+        if(!db->commit())
+            qDebug()<<"Error";
+    }
+}
+
+bool XMLParser::ReadXMLData(QFile* file,QSqlDatabase* db_,QSqlQuery* query_)
+{
+    this->db = db_;
+    this->query = query_;
+    xml.setDevice(file);
+    GenerateBase();
+    db->transaction();
     while (!xml.atEnd() && xml.readNextStartElement())
     {
         if (xml.name() == "timetable")
@@ -17,31 +66,53 @@ bool XMLParser::ReadXMLData(QFile* file)
             while (xml.readNextStartElement())
             {
                 if(xml.hasError()) {
-                        result = false;
-                        break;
+                    result = false;
+                    break;
                 }
                 if(xml.name() == "times")
+                {
                     ReadTimes();
+                }
                 else if(xml.name() == "holidays")
+                {
                     ReadHolidays();
+                }
                 else if(xml.name() == "term")
+                {
                     ReadTerm();
+                }
                 else if(xml.name() == "classes")
+                {
                     ReadClasses();
+                }
                 else if(xml.name() == "subjects")
+                {
                     ReadSubjects();
+                }
                 else if(xml.name() == "rooms")
+                {
                     ReadRooms();
+                }
                 else if(xml.name() == "teachers")
+                {
                     ReadTeachers();
+                }
                 else if(xml.name() == "study_types")
+                {
                     ReadStudyTypes();
+                }
                 else if(xml.name() == "chairs")
+                {
                     ReadChairs();
+                }
                 else if(xml.name() == "loads")
+                {
                     ReadLoads();
+                }
                 else if(xml.name() == "scheds")
+                {
                     ReadScheds();
+                }
                 else
                     xml.skipCurrentElement();
             }
@@ -51,175 +122,145 @@ bool XMLParser::ReadXMLData(QFile* file)
             xml.skipCurrentElement();
         }
     }
-
+    if(!db->commit())
+        qDebug()<<"Error";
+    query->finish();
     xml.clear();
-    file->close();
+    //file->close();
     if(!result)
     {
         QMessageBox::critical(nullptr,
-        "Ошибка чтения XML-файла.","Не правильный формат расписания",
-        QMessageBox::Ok);
+                              "Ошибка чтения XML-файла.","Не правильный формат расписания",
+                              QMessageBox::Ok);
     }
     return result;
 }
 
-Items::TermObj *XMLParser::getTerm()
-{
-    return &term;
-}
-
-Items::TimesObj *XMLParser::getTimes()
-{
-    return &times;
-}
-
-Items::HolidaysObj *XMLParser::getHolidays()
-{
-    return &holidays;
-}
-
-QHash<int, Items::StudyTypeObj> *XMLParser::getStudyTypes()
-{
-    return &studyTypes;
-}
-
-QHash<int, Items::ChairObj>* XMLParser::getChairs()
-{
-    return &chairs;
-}
-
-QHash<int, Items::TeacherObj> *XMLParser::getTeachers()
-{
-    return &teachers;
-}
-
-QHash<int, Items::RoomObj> *XMLParser::getRooms()
-{
-    return &rooms;
-}
-
-QHash<int, Items::SubjectObj> *XMLParser::getSubjects()
-{
-    return &subjects;
-}
-
-QHash<int, Items::ClassObj> *XMLParser::getClasses()
-{
-    return &classes;
-}
-
-QHash<int, Items::LoadObj> *XMLParser::getLoads()
-{
-    return &loads;
-}
-
-QHash<int, Items::SchedObj> *XMLParser::getScheds()
-{
-    return &scheds;
-}
-
 void XMLParser::ReadTerm()
 {
-    Items::TermObj termObj;
+    query->prepare("INSERT INTO Term (beginDate, endDate) VALUES (:beginDate, :endDate)");
     while (!(xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == "term"))
     {
         if(xml.hasError()) {
-                result = false;
-                break;
+            result = false;
+            break;
         }
         if (xml.name() == "begin_date")
-            termObj.beginDate = xml.readElementText();
+            query->bindValue(":beginDate", xml.readElementText());
         if (xml.name() == "end_date")
-            termObj.endDate = xml.readElementText();
+            query->bindValue(":endDate", xml.readElementText());
         xml.readNext();
     }
+    if(!query->exec())
+    {
+        qDebug()<<"[-] Wrong query";
 
-    term = termObj;
+        qDebug()<<query->lastError();
+    }
+
 }
 
 void XMLParser::ReadTimes()
 {
-    Items::TimesObj timesObj;
+    query->prepare("INSERT INTO Times (time) "
+                   "VALUES (:time)");
     if(xml.name() == "times")
     {
-        QVector<QString> time;
-        time.clear();
         while(!(xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == "times"))
         {
             if(xml.name() == "time")
-                time.push_back(xml.readElementText());
+            {
+                query->bindValue(":time", xml.readElementText());
+                if(!query->exec())
+                {
+                    qDebug()<<"[-] Wrong query";
+
+                    qDebug()<<query->lastError();
+                }
+
+            }
             xml.readNext();
         }
-        timesObj.time = time;
     }
-    times = timesObj;
+
 }
 
 void XMLParser::ReadHolidays()
 {
-    Items::HolidaysObj holidaysObj;
+    query->prepare("INSERT INTO Holidays (day) "
+                   "VALUES (:day)");
     if(xml.name() == "holidays")
     {
-        QVector<QString> day;
-        day.clear();
         while(!(xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == "holidays"))
         {
             if(xml.name() == "day")
-                day.push_back(xml.readElementText());
+            {
+                query->bindValue(":day", xml.readElementText());
+                if(!query->exec())
+                {
+                    qDebug()<<"[-] Wrong query";
+
+                    qDebug()<<query->lastError();
+                }
+
+            }
             xml.readNext();
         }
-        holidaysObj.day = day;
     }
-    holidays = holidaysObj;
+
 
 }
 
 void XMLParser::ReadClasses()
 {
-    Items::ClassObj classObj;
-    int id = 0;
+    query->prepare("INSERT INTO Classes (id, name, student, semester, work_hours) "
+                   "VALUES (:id, :name, :student, :semester, :work_hours)");
     while (!(xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == "classes"))
     {
         if(xml.hasError()) {
-                result = false;
-                break;
+            result = false;
+            break;
         }
         if (xml.name() == "id")
-            id = xml.readElementText().toInt();
+            query->bindValue(":id", xml.readElementText().toInt());
         if (xml.name() == "name")
-            classObj.name = xml.readElementText();
+            query->bindValue(":name", xml.readElementText());
         if (xml.name() == "student")
-            classObj.students = xml.readElementText().toInt();
+            query->bindValue(":student", xml.readElementText().toInt());
         if (xml.name() == "semester")
-            classObj.semester = xml.readElementText().toInt();
+            query->bindValue(":semester", xml.readElementText().toInt());
         if (xml.name() == "work_hours")
         {
-            classObj.work_hours.clear();
+            QString work_hours;
             xml.readNext();
             while (!(xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == "work_hours"))
             {
                 if(xml.hasError()) {
-                        result = false;
-                        break;
+                    result = false;
+                    break;
                 }
                 if(xml.name() == "week")
                 {
-                    QVector<int> week;
-                    week.clear();
                     while(!(xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == "week"))
                     {
                         if(xml.name() == "day")
-                            week.push_back(xml.readElementText().toInt());
+                            work_hours += xml.readElementText() + " ";
                         xml.readNext();
                     }
-                    classObj.work_hours.push_back(week);
                 }
                 xml.readNext();
             }
+            query->bindValue(":work_hours", work_hours);
         }
         if((xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == "class"))
         {
-            classes[id] = classObj;
+            if(!query->exec())
+            {
+                qDebug()<<"[-] Wrong query";
+
+                qDebug()<<query->lastError();
+            }
+
         }
         xml.readNext();
     }
@@ -228,23 +269,29 @@ void XMLParser::ReadClasses()
 
 void XMLParser::ReadSubjects()
 {
-    Items::SubjectObj subjectObj;
-    int id = 0;
+    query->prepare("INSERT INTO Subjects (id, fullName, shortName) "
+                   "VALUES (:id, :fullName, :shortName)");
     while (!(xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == "subjects"))
     {
         if(xml.hasError()) {
-                result = false;
-                break;
+            result = false;
+            break;
         }
         if (xml.name() == "id")
-            id = xml.readElementText().toInt();
+            query->bindValue(":id", xml.readElementText().toInt());
         if (xml.name() == "short_name")
-            subjectObj.shortName = xml.readElementText();
+            query->bindValue(":shortName", xml.readElementText());
         if (xml.name() == "full_name")
-            subjectObj.fullName = xml.readElementText();
+            query->bindValue(":fullName", xml.readElementText());
         if((xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == "subject") )
         {
-            subjects[id] = subjectObj;
+            if(!query->exec())
+            {
+                qDebug()<<"[-] Wrong query";
+
+                qDebug()<<query->lastError();
+            }
+
         }
         xml.readNext();
     }
@@ -252,50 +299,54 @@ void XMLParser::ReadSubjects()
 
 void XMLParser::ReadRooms()
 {
-    Items::RoomObj roomObj;
-    int id = 0;
+    query->prepare("INSERT INTO Rooms (id, name, capacity, chairId, work_hours) "
+                   "VALUES (:id, :name, :capacity, :chairId, :work_hours)");
     while (!(xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == "rooms"))
     {
         if(xml.hasError()) {
-                result = false;
-                break;
+            result = false;
+            break;
         }
         if (xml.name() == "id")
-            id = xml.readElementText().toInt();
+            query->bindValue(":id", xml.readElementText().toInt());
         if (xml.name() == "name")
-            roomObj.name = xml.readElementText();
+            query->bindValue(":name", xml.readElementText());
         if (xml.name() == "capacity")
-            roomObj.capacity = xml.readElementText().toInt();
+            query->bindValue(":capacity", xml.readElementText().toInt());
         if (xml.name() == "chair_id")
-            roomObj.chairId = xml.readElementText().toInt();
+            query->bindValue(":chairId", xml.readElementText().toInt());
         if (xml.name() == "work_hours")
         {
-            roomObj.work_hours.clear();
+            QString work_hours;
             xml.readNext();
             while (!(xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == "work_hours"))
             {
                 if(xml.hasError()) {
-                        result = false;
-                        break;
+                    result = false;
+                    break;
                 }
                 if(xml.name() == "week")
                 {
-                    QVector<int> week;
-                    week.clear();
                     while(!(xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == "week"))
                     {
                         if(xml.name() == "day")
-                            week.push_back(xml.readElementText().toInt());
+                            work_hours += xml.readElementText() + " ";
                         xml.readNext();
                     }
-                    roomObj.work_hours.push_back(week);
                 }
                 xml.readNext();
             }
+            query->bindValue(":work_hours", work_hours);
         }
         if((xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == "room"))
         {
-            rooms[id] = roomObj;
+            if(!query->exec())
+            {
+                qDebug()<<"[-] Wrong query";
+
+                qDebug()<<query->lastError();
+            }
+
         }
         xml.readNext();
     }
@@ -303,77 +354,86 @@ void XMLParser::ReadRooms()
 
 void XMLParser::ReadTeachers()
 {
-    Items::TeacherObj teacherObj;
-    int id = 0;
+    query->prepare("INSERT INTO Teachers (id, surname, firstName, secondName, chairId, work_hours) "
+                   "VALUES (:id, :surname, :firstName, :secondName, :chairId, :work_hours)");
     while (!(xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == "teachers"))
     {
         if(xml.hasError()) {
-                result = false;
-                break;
+            result = false;
+            break;
         }
         if (xml.name() == "id")
-            id = xml.readElementText().toInt();
+            query->bindValue(":id", xml.readElementText().toInt());
         if (xml.name() == "surname")
-            teacherObj.surname = xml.readElementText();
+            query->bindValue(":surname", xml.readElementText());
         if (xml.name() == "first_name")
-            teacherObj.firstName = xml.readElementText();
+            query->bindValue(":firstName", xml.readElementText());
         if (xml.name() == "second_name")
-            teacherObj.secondName = xml.readElementText();
+            query->bindValue(":secondName", xml.readElementText());
         if (xml.name() == "chair_id")
-            teacherObj.chairId = xml.readElementText().toInt();
+            query->bindValue(":chairId", xml.readElementText().toInt());
         if (xml.name() == "work_hours")
         {
-            teacherObj.work_hours.clear();
+            QString work_hours;
             xml.readNext();
             while (!(xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == "work_hours"))
             {
                 if(xml.hasError()) {
-                        result = false;
-                        break;
+                    result = false;
+                    break;
                 }
                 if(xml.name() == "week")
                 {
-                    QVector<int> week;
-                    week.clear();
                     while(!(xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == "week"))
                     {
                         if(xml.name() == "day")
-                            week.push_back(xml.readElementText().toInt());
+                            work_hours += xml.readElementText() + " ";
                         xml.readNext();
                     }
-                    teacherObj.work_hours.push_back(week);
                 }
                 xml.readNext();
             }
+            query->bindValue(":work_hours", work_hours);
         }
-        if((xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == "teacher")) // && (teacherObj.firstName != "Fake" && teacherObj.surname[0] != '_' && teacherObj.surname != '=')
+        if((xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == "teacher"))
         {
-            teachers[id] = teacherObj;
+            if(!query->exec())
+            {
+                qDebug()<<"[-] Wrong query";
+
+                qDebug()<<query->lastError();
+            }
+
         }
         xml.readNext();
     }
-}
 
+}
 
 void XMLParser::ReadStudyTypes()
 {
-    Items::StudyTypeObj studyTypeObj;
-    int id = 0;
+    query->prepare("INSERT INTO StudyTypes (id, fullName, shortName) "
+                   "VALUES (:id, :fullName, :shortName)");
     while (!(xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == "study_types"))
     {
         if(xml.hasError()) {
-                result = false;
-                break;
+            result = false;
+            break;
         }
         if (xml.name() == "id")
-            id = xml.readElementText().toInt();
+            query->bindValue(":id", xml.readElementText().toInt());
         if (xml.name() == "short_name")
-            studyTypeObj.shortName = xml.readElementText();
+            query->bindValue(":shortName", xml.readElementText());
         if (xml.name() == "full_name")
-            studyTypeObj.fullName = xml.readElementText();
+            query->bindValue(":fullName", xml.readElementText());
         if((xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == "study_type") )
         {
-            studyTypes[id] = studyTypeObj;
+            if(!query->exec())
+            {
+                qDebug()<<"[-] Wrong query";
+
+                qDebug()<<query->lastError();
+            }
         }
         xml.readNext();
     }
@@ -381,23 +441,28 @@ void XMLParser::ReadStudyTypes()
 
 void XMLParser::ReadChairs()
 {
-    Items::ChairObj chairObj;
-    int id = 0;
+    query->prepare("INSERT INTO Chairs (id, fullName, shortName) "
+                   "VALUES (:id, :fullName, :shortName)");
     while (!(xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == "chairs"))
     {
         if(xml.hasError()) {
-                result = false;
-                break;
+            result = false;
+            break;
         }
         if (xml.name() == "id")
-            id = xml.readElementText().toInt();
+            query->bindValue(":id", xml.readElementText().toInt());
         if (xml.name() == "short_name")
-            chairObj.shortName = xml.readElementText();
+            query->bindValue(":shortName", xml.readElementText());
         if (xml.name() == "full_name")
-            chairObj.fullName = xml.readElementText();
+            query->bindValue(":fullName", xml.readElementText());
         if((xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == "chair"))
         {
-            chairs[id] = chairObj;
+            if(!query->exec())
+            {
+                qDebug()<<"[-] Wrong query";
+
+                qDebug()<<query->lastError();
+            }
         }
         xml.readNext();
     }
@@ -405,107 +470,100 @@ void XMLParser::ReadChairs()
 
 void XMLParser::ReadLoads()
 {
-    Items::LoadObj loadObj;
-    int id = 0;
+    query->prepare("INSERT INTO Loads (id, klassIdList) "
+                   "VALUES (:id, :klassIdList)");
+
+    int loadId = 0;
     while (!(xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == "loads"))
     {
         if(xml.hasError()) {
-                result = false;
-                break;
+            result = false;
+            break;
         }
         if (xml.name() == "id")
-            id = xml.readElementText().toInt();
-        if (xml.name() == "same_time")
-            loadObj.sameTime = xml.readElementText().toInt();
+        {
+            loadId = xml.readElementText().toInt();
+            query->bindValue(":id", loadId);
+
+        }
         if (xml.name() == "groups")
         {
-            loadObj.groups.clear();
             xml.readNext();
             while (!(xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == "groups"))
             {
                 if(xml.hasError()) {
-                        result = false;
-                        break;
+                    result = false;
+                    break;
                 }
                 if(xml.name() == "group")
                 {
-                    Items::GroupObj group;
+                    QSqlQuery query2 = QSqlQuery();
+                    query2.prepare("INSERT INTO LoadGroups (loadId, teacherId, subjectId, roomIdList, studyTypeId) "
+                                   "VALUES (:loadId, :teacherId, :subjectId, :roomIdList, :studyTypeId)");
                     while(!(xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == "group"))
                     {
                         if(xml.hasError()) {
-                                result = false;
-                                break;
+                            result = false;
+                            break;
                         }
                         if(xml.name() == "teacher_id")
-                            group.teacherId = xml.readElementText().toInt();
+                            query2.bindValue(":teacherId", xml.readElementText().toInt());
                         if(xml.name() == "subject_id")
-                            group.subjectId = xml.readElementText().toInt();
+                            query2.bindValue(":subjectId", xml.readElementText().toInt());
                         if(xml.name() == "room_id_list")
                         {
-                            QVector<int> roomIdList;
+                            QString roomIdList;
                             roomIdList.clear();
                             while(!(xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == "room_id_list"))
                             {
                                 if(xml.name() == "int")
-                                    roomIdList.push_back(xml.readElementText().toInt());
+                                    roomIdList += xml.readElementText() + " ";
                                 xml.readNext();
                             }
-                            group.roomIdList = roomIdList;
+                            query2.bindValue(":roomIdList", roomIdList);
                         }
-                        if(xml.name() == "hours_total")
-                            group.hoursTotal = xml.readElementText().toInt();
-                        if(xml.name() == "hours_per_week")
-                            group.hoursPerWeek = xml.readElementText().toInt();
-                        if(xml.name() == "week_type")
-                            group.weekType = xml.readElementText();
-                        if(xml.name() == "period_position")
-                            group.periodPosition = xml.readElementText();
-                        if(xml.name() == "pair_type")
-                            group.pairType= xml.readElementText();
                         if(xml.name() == "study_type_id")
-                            group.studyTypeId = xml.readElementText().toInt();
-                        if(xml.name() == "hour_per_week_list")
-                        {
-                            QVector<int> hourPerWeekList;
-                            hourPerWeekList.clear();
-                            while(!(xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == "hour_per_week_list"))
-                            {
-                                if(xml.hasError()) {
-                                        result = false;
-                                        break;
-                                }
-                                if(xml.name() == "int")
-                                    hourPerWeekList.push_back(xml.readElementText().toInt());
-                                xml.readNext();
-                            }
-                            group.hourPerWeekList = hourPerWeekList;
-                        }
+                            query2.bindValue(":studyTypeId", xml.readElementText().toInt());
+
+                        query2.bindValue(":loadId", loadId);
                         xml.readNext();
+                        if(xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == "group")
+                            if(!query2.exec())
+                            {
+                                qDebug()<<"[-] Wrong query";
+                                qDebug()<<query2.lastError();
+                            }
                     }
-                    loadObj.groups.push_back(group);
                 }
+
                 xml.readNext();
             }
         }
         if(xml.name() == "klass_id_list")
         {
-            QVector<int> klassIdList;
+            QString klassIdList;
             klassIdList.clear();
+            klassIdList += " ";
             while(!(xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == "klass_id_list"))
             {
                 if(xml.hasError()) {
-                        result = false;
-                        break;
+                    result = false;
+                    break;
                 }
                 if(xml.name() == "int")
-                    klassIdList.push_back(xml.readElementText().toInt());
+                    klassIdList += xml.readElementText() + " ";
                 xml.readNext();
             }
-            loadObj.klassIdList = klassIdList;
+            query->bindValue(":klassIdList", klassIdList);
         }
         if((xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == "load"))
         {
-            loads[id] = loadObj;
+            if(!query->exec())
+            {
+                qDebug()<<"[-] Wrong query";
+
+                qDebug()<<query->lastError();
+            }
         }
         xml.readNext();
     }
@@ -513,36 +571,72 @@ void XMLParser::ReadLoads()
 
 void XMLParser::ReadScheds()
 {
-    Items::SchedObj schedObj;
+    query->prepare("INSERT INTO `Scheds` (`id`, `day`, `hour`, `group`, `loadId`, `roomId`, `beginDate`, `endDate`) "
+                   "VALUES (:id, :day, :hour, :group, :loadId, :roomId, :beginDate, :endDate)");
     int id = 0;
     while (!(xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == "scheds"))
     {
         if(xml.hasError()) {
-                result = false;
-                break;
+            result = false;
+            break;
         }
         if (xml.name() == "day")
-            schedObj.day = xml.readElementText().toInt();
+        {
+            int day = xml.readElementText().toInt();
+            query->bindValue(":day", day);
+        }
         if (xml.name() == "hour")
-            schedObj.hour = xml.readElementText().toInt();
+        {
+            int hour = xml.readElementText().toInt();
+            query->bindValue(":hour", hour);
+        }
         if (xml.name() == "group")
-            schedObj.group = xml.readElementText().toInt();
+        {
+            int group = xml.readElementText().toInt();
+            query->bindValue(":group", group);
+        }
         if (xml.name() == "load_id")
-            schedObj.loadId = xml.readElementText().toInt();
+        {
+            int load_id = xml.readElementText().toInt();
+            query->bindValue(":loadId", load_id);
+        }
         if (xml.name() == "room_id")
-            schedObj.roomId = xml.readElementText().toInt();
-        if (xml.name() == "fixed")
-            schedObj.fixed = xml.readElementText().toInt();
+        {
+            int room_id = xml.readElementText().toInt();
+            query->bindValue(":roomId", room_id);
+        }
         if (xml.name() == "begin_date")
-            schedObj.beginDate = xml.readElementText();
+        {
+            QString beginDate = xml.readElementText();
+            QDate bd = QDate::fromString(beginDate,"dd.MM.yyyy");
+            query->bindValue(":beginDate", bd.toString("yyyyMMdd"));
+        }
         if (xml.name() == "end_date")
-            schedObj.endDate = xml.readElementText();
+        {
+            QString endDate = xml.readElementText();
+            QDate ed = QDate::fromString(endDate,"dd.MM.yyyy");
+            query->bindValue(":endDate", ed.toString("yyyyMMdd"));
+        }
         if((xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == "sched"))
         {
-            scheds[id] = schedObj;
+            query->bindValue(":id", id);
+            if(!query->exec())
+            {
+                qDebug()<<"[-] Wrong query";
+
+                qDebug()<<query->lastQuery();
+                auto map = query->boundValues();
+
+                qDebug()<<query->lastError();
+            }
             id++;
         }
         xml.readNext();
     }
 }
+
+
+
+
+
 
