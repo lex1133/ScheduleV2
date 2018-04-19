@@ -18,41 +18,51 @@ MainWindow::~MainWindow()
 void MainWindow::OpenProject()
 {
     auto fileName = QFileDialog::getOpenFileName(this,
-                                                 tr("Открыть расписание"), "" , tr("XML файл (*.xml)"));
+                                                 tr("Открыть расписание"), "" , tr("SCDB файл (*.scdb)"));
     if(!fileName.isEmpty())
     {
         QFile* file = new QFile(fileName);
-        if (!file->open(QIODevice::ReadOnly | QIODevice::Text))
+        if (!file->open(QIODevice::ReadWrite | QIODevice::Text))
         {
-            QMessageBox::critical(this,tr("Ошибка"),tr("Невозможно открыть XML-конфиг"), QMessageBox::Ok);
+            QMessageBox::critical(this,tr("Ошибка"),tr("Невозможно открыть базу данных"), QMessageBox::Ok);
         }
         else
         {
-            if(parser.ReadXMLData(file))
-            {
-                curProject = fileName;
-                ui->centralWidget->setEnabled(true);
-                ui->CatalogsTab->loadCatalogs(&parser);
-                ui->ScheduleTab->loadSchedule(&parser);
+            QTime t;
+            t.start();
+            QFileInfo fin(*file);
+            db = QSqlDatabase::addDatabase("QSQLITE");
+            db.setDatabaseName(fin.absoluteFilePath());
+            db.open();
+            if (fin.isFile()) {
+                if (db.open()) {
+                    qDebug()<<"[+] Connected to Database File";
+                }
+                else {
+                    qDebug()<<"[!] Database File was not opened";
+                }
             }
+            else {
+                qDebug()<<"[!] Database File does not exist";
+            }
+            query = QSqlQuery(db);
+            if(ui->CatalogsTab->loadCatalogs(&db,&query) && ui->ScheduleTab->loadSchedule(&db,&query))
+            {
+                ui->centralWidget->setEnabled(true);
+            }
+            else
+            {
+                QMessageBox::critical(this,tr("Ошибка"),tr("Невозможно загрузить базу данных"), QMessageBox::Ok);
+            }
+
+            qDebug("Time elapsed: %d ms", t.elapsed());
         }
     }
 }
 
 bool MainWindow::SaveProject(QString fileName)
 {
-    if(fileName.isEmpty())
-        fileName = QFileDialog::getSaveFileName(this,
-                                                tr("Сохранить расписание"), "", tr("XML файл (*.xml)"));
-    if(!fileName.isEmpty())
-    {
-        return true;
-    }
-    else
-    {
-        QMessageBox::critical(this,tr("Ошибка"),tr("Файл сохраниения не указан!"), QMessageBox::Ok);
-        return false;
-    }
+
 }
 
 
@@ -87,3 +97,27 @@ void MainWindow::on_MenuExitApp_triggered()
 
 
 
+
+void MainWindow::on_MenuImportFile_triggered()
+{
+    auto fileName = QFileDialog::getOpenFileName(this,
+                                                 tr("Открыть расписание"), "" , tr("XML файл (*.xml)"));
+    if(!fileName.isEmpty())
+    {
+        QFile* file = new QFile(fileName);
+        if (!file->open(QIODevice::ReadWrite | QIODevice::Text))
+        {
+            QMessageBox::critical(this,tr("Ошибка"),tr("Невозможно открыть XML-конфиг"), QMessageBox::Ok);
+        }
+        else
+        {
+
+            QTime t;
+            t.start();
+            parser.ReadXMLData(file,&db,&query);
+            ui->CatalogsTab->loadCatalogs(&db,&query);
+            ui->ScheduleTab->loadSchedule(&db,&query);
+            qDebug("Time elapsed: %d ms", t.elapsed());
+        }
+    }
+}

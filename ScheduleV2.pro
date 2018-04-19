@@ -4,9 +4,9 @@
 #
 #-------------------------------------------------
 
-QT       += core gui xml printsupport
+QT += core gui xml printsupport sql
 QT += widgets
-TARGET = ScheduleV2
+TARGET = "Schedule v2.0"
 TEMPLATE = app
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which has been marked as deprecated (the exact warnings
@@ -15,8 +15,8 @@ TEMPLATE = app
 RC_ICONS = Icon.ico
 VERSION = 0.0.0.1
 QMAKE_TARGET_COMPANY = "lex1133's Software"
-QMAKE_TARGET_PRODUCT = "пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅ 'пїЅпїЅпїЅпїЅпїЅпїЅпїЅ'"
-QMAKE_TARGET_DESCRIPTION = "пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅ 'пїЅпїЅпїЅпїЅпїЅпїЅпїЅ'"
+QMAKE_TARGET_PRODUCT = "Schedule v2.0"
+QMAKE_TARGET_DESCRIPTION = "Программа для печати и оперативного изменения расписания"
 QMAKE_TARGET_COPYRIGHT = "Copyright"
 
 DEFINES += QT_DEPRECATED_WARNINGS

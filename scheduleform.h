@@ -1,10 +1,11 @@
 #ifndef SCHEDULEFORM_H
 #define SCHEDULEFORM_H
 
-#include "xmlparser.h"
-#include "items.h"
+
 #include "bookaudienceform.h"
 
+#include <QtSql/QSqlDatabase>
+#include <QtSql>
 #include <QWidget>
 #include <QDebug>
 #include <QDate>
@@ -22,9 +23,8 @@ class ScheduleForm : public QWidget
 public:
     explicit ScheduleForm(QWidget *parent = 0);
     ~ScheduleForm();
-    void loadSchedule(XMLParser* parser_);
+    bool loadSchedule(QSqlDatabase* db_,QSqlQuery* query_);
     void updateTable();
-    QVector<QVector<QVector<QPair<QString,QString>>>> reserved;
 
 private slots:
 
@@ -42,8 +42,10 @@ private:
     QDate beginDate;
     QDate endDate;
     Ui::ScheduleForm *ui;
-    XMLParser* parser;
+    QSqlDatabase* db;
+    QSqlQuery* query;
     bool loaded = false;
+    bool loadResult = true;
 
     struct schedInfo
     {

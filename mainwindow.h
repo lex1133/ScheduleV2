@@ -34,10 +34,14 @@ private slots:
 
     void on_MenuSaveProject_triggered();
 
+    void on_MenuImportFile_triggered();
+
 private:
     Ui::MainWindow *ui;
     QString curProject;   
     XMLParser parser;
+    QSqlDatabase db;
+    QSqlQuery query;
 };
 
 #endif // MAINWINDOW_H
