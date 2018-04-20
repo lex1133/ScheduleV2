@@ -20,10 +20,11 @@ class XMLParser
 public:
     XMLParser();
     bool ReadXMLData(QFile* file,QSqlDatabase* db_,QSqlQuery* query_);
+    QString newbase;
 
 private:
 
-    void GenerateBase();
+    bool GenerateBase();
     void ReadTerm();
     void ReadTimes();
     void ReadHolidays();

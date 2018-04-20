@@ -6,6 +6,7 @@ CatalogsForm::CatalogsForm(QWidget *parent) :
     ui(new Ui::CatalogsForm)
 {
     ui->setupUi(this);
+    ui->CatalogsTeachersTable->setColumnHidden(0,true);
 }
 
 CatalogsForm::~CatalogsForm()
@@ -48,6 +49,16 @@ bool CatalogsForm::loadCatalogs(QSqlDatabase* db_,QSqlQuery* query_)
     return loadResult;
 }
 
+void CatalogsForm::closeCatalogs()
+{
+    ui->CatalogsSubtab->setCurrentIndex(0);
+    ui->CatalogsChairsTable->setRowCount(0);
+    ui->CatalogsRoomsTable->setRowCount(0);
+    ui->CatalogsTeachersTable->setRowCount(0);
+    ui->CatalogsSubjectsTable->setRowCount(0);
+    ui->CatalogsClassesTable->setRowCount(0);
+}
+
 void CatalogsForm::loadChairs()
 {
     if(!query->exec("SELECT * FROM `Chairs`"))
@@ -87,7 +98,9 @@ void CatalogsForm::loadTeachers()
     }
     ui->CatalogsTeachersTable->setRowCount(numberOfRows);
     while (query->next()) {
-        ui->CatalogsTeachersTable->setItem(query->value(0).toInt(),0, new QTableWidgetItem(query->value(1).toString() + " " + query->value(2).toString()[0] + ". " + query->value(3).toString()[0] + "."));
+
+        ui->CatalogsTeachersTable->setItem(query->value(0).toInt(),0, new QTableWidgetItem(query->value(0).toString()));
+        ui->CatalogsTeachersTable->setItem(query->value(0).toInt(),1, new QTableWidgetItem(query->value(1).toString() + " " + query->value(2).toString()[0] + ". " + query->value(3).toString()[0] + "."));
         if(query->value(4).toInt() != -1)
         {
             QSqlQuery tmp = QSqlQuery();
@@ -99,13 +112,14 @@ void CatalogsForm::loadTeachers()
                 return;
             }
             tmp.next();
-            ui->CatalogsTeachersTable->setItem(query->value(0).toInt(),1, new QTableWidgetItem(tmp.value(1).toString()));
+            ui->CatalogsTeachersTable->setItem(query->value(0).toInt(),2, new QTableWidgetItem(tmp.value(1).toString()));
         }
         else
         {
-            ui->CatalogsTeachersTable->setItem(query->value(0).toInt(),1, new QTableWidgetItem("Не определена"));
+            ui->CatalogsTeachersTable->setItem(query->value(0).toInt(),2, new QTableWidgetItem("Не определена"));
         }
     }
+
 }
 
 void CatalogsForm::loadRooms()
@@ -579,7 +593,7 @@ void CatalogsForm::drawTeacherSched(QPainter &painter, QList<int> &verts, QList<
     schedObj.resize(6);
     for(int i = 0; i < 6; i++)
         schedObj[i].resize(8);
-    query->prepare("SELECT * FROM `Scheds` WHERE loadId IN (select loadId from `LoadGroups` where teacherId == "+ QString::number(teacherId) + ")");
+    query->prepare("SELECT * FROM `Scheds` WHERE loadId IN (select loadId from `LoadGroups` where teacherId == "+ ui->CatalogsTeachersTable->item(teacherId,0)->text() + ")");
     if(!query->exec())
     {
         qDebug()<<"Scheds query error!";
@@ -958,7 +972,7 @@ void CatalogsForm::on_CatalogsTeachersTable_cellDoubleClicked(int row, int colum
     QDir d;
     if(!d.exists("..\\Расписание\\Преподаватели\\"))
         d.mkpath("..\\Расписание\\Преподаватели\\");
-    printer.setOutputFileName("..\\Расписание\\Преподаватели\\" + ui->CatalogsTeachersTable->item(row,0)->text() + ".pdf");
+    printer.setOutputFileName("..\\Расписание\\Преподаватели\\" + ui->CatalogsTeachersTable->item(row,1)->text() + ".pdf");
     QPainter painter;
     if(!painter.begin(&printer))
     {
@@ -972,4 +986,38 @@ void CatalogsForm::on_CatalogsTeachersTable_cellDoubleClicked(int row, int colum
 
 
     qDebug()<<"Time elapsed: "<<timer.elapsed();
+}
+
+void CatalogsForm::on_ExportAllTeachersButton_clicked()
+{
+    QProgressDialog progress("Сохранение расписаний","Стоп", 0, ui->CatalogsClassesTable->rowCount(), this);
+    progress.setWindowModality(Qt::WindowModal);
+    for(int i = 0; i < ui->CatalogsClassesTable->rowCount(); i++)
+    {
+        if (progress.wasCanceled())
+            break;
+        progress.setValue(i);
+        progress.setLabelText("Сохранение расписаний " + QString::number(i+1) + "/" + QString::number(ui->CatalogsClassesTable->rowCount()));
+        QPrinter printer(QPrinter::HighResolution);
+        printer.setOutputFormat(QPrinter::PdfFormat);
+        printer.setColorMode(QPrinter::GrayScale);
+        printer.setOrientation(QPrinter::Landscape);
+        printer.setPageSize(QPrinter::A4);
+        QDir d;
+        if(!d.exists("..\\Расписание\\Преподаватели\\"))
+            d.mkpath("..\\Расписание\\Преподаватели\\");
+        printer.setOutputFileName("..\\Расписание\\Преподаватели\\" + ui->CatalogsTeachersTable->item(i,1)->text() + ".pdf");
+        QPainter painter;
+        if(!painter.begin(&printer))
+        {
+            qWarning("Falied");
+            return;
+        }
+
+        drawSchedule(painter, printer.pageRect(),"teacher",i);
+
+        painter.end();
+    }
+
+    progress.setValue(ui->CatalogsClassesTable->rowCount());
 }

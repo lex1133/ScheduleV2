@@ -9,6 +9,7 @@
 #include <QtXml>
 #include <QFile>
 #include <QFileDialog>
+#include <QProgressDialog>
 #include <QDebug>
 
 namespace Ui {
@@ -35,6 +36,8 @@ private slots:
     void on_MenuSaveProject_triggered();
 
     void on_MenuImportFile_triggered();
+
+    void on_MenuCloseProject_triggered();
 
 private:
     Ui::MainWindow *ui;

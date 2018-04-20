@@ -83,7 +83,6 @@
     <addaction name="separator"/>
     <addaction name="MenuCloseProject"/>
     <addaction name="separator"/>
-    <addaction name="MenuPrintSchedule"/>
     <addaction name="separator"/>
     <addaction name="MenuExitApp"/>
    </widget>
@@ -130,14 +129,6 @@
     <string>Ctrl+W</string>
    </property>
   </action>
-  <action name="MenuPrintSchedule">
-   <property name="text">
-    <string>Печать...</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+P</string>
-   </property>
-  </action>
   <action name="MenuExitApp">
    <property name="text">
     <string>Выход</string>
@@ -154,7 +145,7 @@
     <string>Импорт</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+E</string>
+    <string>Ctrl+I</string>
    </property>
   </action>
  </widget>

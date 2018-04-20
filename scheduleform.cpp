@@ -258,6 +258,15 @@ void ScheduleForm::updateTable()
     }
 }
 
+void ScheduleForm::closeSchedule()
+{
+    loaded = false;
+    ui->capacity->clear();
+    ui->Multimedia->setChecked(false);
+    ui->RoomsComboBox->clear();
+    ui->WeekComboBox->clear();
+}
+
 
 void ScheduleForm::on_RoomsComboBox_currentIndexChanged(int index)
 {

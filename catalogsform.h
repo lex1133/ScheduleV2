@@ -29,6 +29,7 @@ public:
     explicit CatalogsForm(QWidget *parent = 0);
     ~CatalogsForm();
     bool loadCatalogs(QSqlDatabase* db_,QSqlQuery* query_);
+    void closeCatalogs();
 
 private:
     Ui::CatalogsForm *ui;    
@@ -99,6 +100,7 @@ private slots:
     void on_CatalogsClassesTable_cellDoubleClicked(int row, int column);
     void on_ExportAllClassesButton_clicked();
     void on_CatalogsTeachersTable_cellDoubleClicked(int row, int column);
+    void on_ExportAllTeachersButton_clicked();
 };
 
 

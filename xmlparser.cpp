@@ -5,7 +5,7 @@ XMLParser::XMLParser()
 
 }
 
-void XMLParser::GenerateBase()
+bool XMLParser::GenerateBase()
 {
     auto fileName = QFileDialog::getSaveFileName(0,
                                                  QObject::tr("Сохранить новую базу данных"), "" , QObject::tr("SCDB файл (*.scdb)"));
@@ -19,6 +19,7 @@ void XMLParser::GenerateBase()
 
         db = new QSqlDatabase(QSqlDatabase::addDatabase("QSQLITE"));
         db->setDatabaseName(check_file.absoluteFilePath());
+        newbase = check_file.absoluteFilePath();
 
         if (db->open()) {
             qDebug()<<"[+] Connected to Database File";
@@ -47,8 +48,13 @@ void XMLParser::GenerateBase()
         query->exec("CREATE TABLE `Times` ( `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, `time` TEXT NOT NULL )");
         query->exec("CREATE TABLE `LoadGroups` ( `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,`loadId` INTEGER NOT NULL, `teacherId` INTEGER NOT NULL, `subjectId` INTEGER NOT NULL, `roomIdList` TEXT, `studyTypeId` INTEGER NOT NULL )");
         if(!db->commit())
+        {
             qDebug()<<"Error";
+            return false;
+        }
+        return true;
     }
+    return false;
 }
 
 bool XMLParser::ReadXMLData(QFile* file,QSqlDatabase* db_,QSqlQuery* query_)
@@ -56,7 +62,9 @@ bool XMLParser::ReadXMLData(QFile* file,QSqlDatabase* db_,QSqlQuery* query_)
     this->db = db_;
     this->query = query_;
     xml.setDevice(file);
-    GenerateBase();
+    if(!GenerateBase())
+        return false;
+
     db->transaction();
     while (!xml.atEnd() && xml.readNextStartElement())
     {
@@ -125,8 +133,9 @@ bool XMLParser::ReadXMLData(QFile* file,QSqlDatabase* db_,QSqlQuery* query_)
     if(!db->commit())
         qDebug()<<"Error";
     query->finish();
+
     xml.clear();
-    //file->close();
+    file->close();
     if(!result)
     {
         QMessageBox::critical(nullptr,

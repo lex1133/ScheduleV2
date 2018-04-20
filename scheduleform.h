@@ -25,6 +25,7 @@ public:
     ~ScheduleForm();
     bool loadSchedule(QSqlDatabase* db_,QSqlQuery* query_);
     void updateTable();
+    void closeSchedule();
 
 private slots:
 

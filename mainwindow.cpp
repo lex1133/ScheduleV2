@@ -114,10 +114,42 @@ void MainWindow::on_MenuImportFile_triggered()
 
             QTime t;
             t.start();
+            ui->statusBar->showMessage("Идет загрузка XML...");
             parser.ReadXMLData(file,&db,&query);
-            ui->CatalogsTab->loadCatalogs(&db,&query);
-            ui->ScheduleTab->loadSchedule(&db,&query);
+            ui->statusBar->showMessage("Загрузка XML прошла успешно!",1500);
+            query = QSqlQuery(db);
+            if(ui->CatalogsTab->loadCatalogs(&db,&query) && ui->ScheduleTab->loadSchedule(&db,&query))
+            {
+                ui->centralWidget->setEnabled(true);
+            }
+            else
+            {
+                QMessageBox::critical(this,tr("Ошибка"),tr("Невозможно загрузить базу данных"), QMessageBox::Ok);
+            }
             qDebug("Time elapsed: %d ms", t.elapsed());
         }
+    }
+}
+
+void MainWindow::on_MenuCloseProject_triggered()
+{
+    auto answer = QMessageBox::warning(this,tr("Подтверждение закрытия"),tr("Сохранить текущее расписание?"),
+                                       QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel , QMessageBox::Cancel);
+    if(answer == QMessageBox::Yes)
+    {
+        if(SaveProject(curProject))
+        {
+            ui->CatalogsTab->closeCatalogs();
+            ui->ScheduleTab->closeSchedule();
+            ui->tabWidget->setCurrentIndex(0);
+            ui->centralWidget->setEnabled(false);
+        }
+    }
+    else if(answer == QMessageBox::No)
+    {
+        ui->CatalogsTab->closeCatalogs();
+        ui->ScheduleTab->closeSchedule();
+        ui->tabWidget->setCurrentIndex(0);
+        ui->centralWidget->setEnabled(false);
     }
 }
