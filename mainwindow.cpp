@@ -7,6 +7,77 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
     ui->centralWidget->setEnabled(false);
+    if(QApplication::arguments().size() > 1)
+    {
+        QFile argFile(QApplication::arguments()[1]);
+        QFileInfo argFin(argFile);
+        if(argFin.completeSuffix() == "scdb")
+        {
+            QFile* file = new QFile(argFin.absoluteFilePath());
+            if (!file->open(QIODevice::ReadWrite | QIODevice::Text))
+            {
+                QMessageBox::critical(this,tr("Ошибка"),tr("Невозможно открыть базу данных"), QMessageBox::Ok);
+            }
+            else
+            {
+                QTime t;
+                t.start();
+                QFileInfo fin(*file);
+                db = QSqlDatabase::addDatabase("QSQLITE");
+                db.setDatabaseName(fin.absoluteFilePath());
+                db.open();
+                if (fin.isFile()) {
+                    if (db.open()) {
+                        qDebug()<<"[+] Connected to Database File";
+                    }
+                    else {
+                        qDebug()<<"[!] Database File was not opened";
+                    }
+                }
+                else {
+                    qDebug()<<"[!] Database File does not exist";
+                }
+                query = QSqlQuery(db);
+                if(ui->CatalogsTab->loadCatalogs(&db,&query) && ui->ScheduleTab->loadSchedule(&db,&query))
+                {
+                    ui->centralWidget->setEnabled(true);
+                }
+                else
+                {
+                    QMessageBox::critical(this,tr("Ошибка"),tr("Невозможно загрузить базу данных"), QMessageBox::Ok);
+                }
+
+                qDebug("Time elapsed: %d ms", t.elapsed());
+            }
+        }
+        else if(argFin.completeSuffix() == "xml")
+        {
+            QFile* file = new QFile(argFin.absoluteFilePath());
+            if (!file->open(QIODevice::ReadWrite | QIODevice::Text))
+            {
+                QMessageBox::critical(this,tr("Ошибка"),tr("Невозможно открыть XML-конфиг"), QMessageBox::Ok);
+            }
+            else
+            {
+
+                QTime t;
+                t.start();
+                ui->statusBar->showMessage("Идет загрузка XML...");
+                parser.ReadXMLData(file,&db,&query);
+                ui->statusBar->showMessage("Загрузка XML прошла успешно!",1500);
+                query = QSqlQuery(db);
+                if(ui->CatalogsTab->loadCatalogs(&db,&query) && ui->ScheduleTab->loadSchedule(&db,&query))
+                {
+                    ui->centralWidget->setEnabled(true);
+                }
+                else
+                {
+                    QMessageBox::critical(this,tr("Ошибка"),tr("Невозможно загрузить базу данных"), QMessageBox::Ok);
+                }
+                qDebug("Time elapsed: %d ms", t.elapsed());
+            }
+        }
+    }
 }
 
 MainWindow::~MainWindow()

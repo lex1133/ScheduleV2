@@ -81,8 +81,9 @@ private:
     void loadRooms();
     void loadSubjects();
     void loadClasses();
-    void drawClassSched(QPainter &painter, QList<int> &verts, QList<int> &hors, QString className);
+    void drawClassSched(QPainter &painter, QList<int> &verts, QList<int> &hors, int classId);
     void drawTeacherSched(QPainter &painter, QList<int> &verts, QList<int> &hors, int teacherId);
+    void drawRoomSched(QPainter &painter, QList<int> &verts, QList<int> &hors, int roomId);
     void drawSchedTable(QPainter &painter, QList<int> &verts, QList<int> &hors, QVector<QVector<QPair<int,QVector<SubInfo>>>>& schedObj);
     void drawSchedule(QPainter &painter,QRect pageRect, QString type, int row);
     void drawRotatedText(QPainter &painter, int x, int y, int width, int height, const QString &text);
@@ -101,6 +102,11 @@ private slots:
     void on_ExportAllClassesButton_clicked();
     void on_CatalogsTeachersTable_cellDoubleClicked(int row, int column);
     void on_ExportAllTeachersButton_clicked();
+    void on_ExportSelectedClassesButton_clicked();
+    void on_CatalogsRoomsTable_cellDoubleClicked(int row, int column);
+    void on_ExportAllRoomsButton_clicked();
+    void on_ExportSelectedRoomsPutton_clicked();
+    void on_ExporttSelectedTeachersButton_clicked();
 };
 
 
