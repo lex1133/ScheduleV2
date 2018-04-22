@@ -3,6 +3,7 @@
 
 #include "xmlparser.h"
 #include "catalogsform.h"
+#include "settingsform.h"
 
 #include <QMainWindow>
 #include <QMessageBox>
@@ -38,6 +39,10 @@ private slots:
     void on_MenuImportFile_triggered();
 
     void on_MenuCloseProject_triggered();
+
+    void on_MenuAbout_triggered();
+
+    void on_MenuSettings_triggered();
 
 private:
     Ui::MainWindow *ui;

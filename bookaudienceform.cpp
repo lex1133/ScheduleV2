@@ -50,6 +50,20 @@ void BookAudienceForm::bookAudience(ScheduleForm* sform_,QSqlDatabase* db_,QSqlQ
     completer->setCaseSensitivity(Qt::CaseInsensitive);
     ui->teacherLine->setCompleter(completer);
 
+    QStringList wordList2;
+    if(!query->exec("SELECT * FROM `Classes`"))
+    {
+        qDebug()<<"Classes query falure";
+    }
+    while(query->next())
+    {
+        wordList2<<query->value(1).toString();
+    }
+
+    QCompleter *completer2 = new QCompleter(wordList2, this);
+    completer2->setCaseSensitivity(Qt::CaseInsensitive);
+    ui->classLine->setCompleter(completer2);
+
     query->finish();
 }
 

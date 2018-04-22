@@ -2,10 +2,12 @@
 #define CATALOGSFORM_H
 
 #include "xmlparser.h"
+#include "settingsform.h"
 
 #include <QProgressDialog>
 #include <QWidget>
 #include <QDebug>
+#include <QSettings>
 #include <QFile>
 #include <QFileInfo>
 #include <QtSql/QSqlDatabase>
@@ -36,6 +38,7 @@ private:
     QSqlDatabase* db;
     QSqlQuery* query;
     bool loadResult = true;
+    QSettings* sett;
 
     struct SubInfo
     {

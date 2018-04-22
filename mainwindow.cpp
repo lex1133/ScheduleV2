@@ -7,6 +7,7 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
     ui->centralWidget->setEnabled(false);
+
     if(QApplication::arguments().size() > 1)
     {
         QFile argFile(QApplication::arguments()[1]);
@@ -77,6 +78,15 @@ MainWindow::MainWindow(QWidget *parent) :
                 qDebug("Time elapsed: %d ms", t.elapsed());
             }
         }
+    }
+    QFileInfo fin(QApplication::arguments()[0]);
+    QSettings* sett = new QSettings(fin.absolutePath() + "\\settings.ini",QSettings::IniFormat);
+    if(!sett->contains("PathToSave"))
+    {
+        QMessageBox::information(0,tr("Конфигурация не определнна"), tr("Файл конфигурации не найден или поврежден!<br>"
+                                                                       "Пожалуйста произведите настройку программы."),QMessageBox::Ok);
+        SettingsForm* sf = new SettingsForm(0);
+        sf->show();
     }
 }
 
@@ -223,4 +233,18 @@ void MainWindow::on_MenuCloseProject_triggered()
         ui->tabWidget->setCurrentIndex(0);
         ui->centralWidget->setEnabled(false);
     }
+}
+
+void MainWindow::on_MenuAbout_triggered()
+{
+    QMessageBox::about(this,tr("О программе"),tr("<center><h1>Расписание V2.0</h1></center><br>"
+                                                 "Программа разработанна по заказу МГТУ ВО \"СТАНКИН\" в рамках производственной практики<br>"
+                                                 "Автор: Данилин Алексей Олегович ИДБ-15-15<br>"
+                                                 "E-mail: <a href=\"mailto:stud115089@stankin.ru\" target=\"_top\">stud115089@stankin.ru</a><br>"));
+}
+
+void MainWindow::on_MenuSettings_triggered()
+{
+    SettingsForm* sf = new SettingsForm(0);
+    sf->show();
 }

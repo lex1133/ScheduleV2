@@ -86,7 +86,22 @@
     <addaction name="separator"/>
     <addaction name="MenuExitApp"/>
    </widget>
+   <widget class="QMenu" name="menu_2">
+    <property name="title">
+     <string>Справка</string>
+    </property>
+    <addaction name="MenuAbout"/>
+    <addaction name="MenuHelp"/>
+   </widget>
+   <widget class="QMenu" name="menu_3">
+    <property name="title">
+     <string>Изменить</string>
+    </property>
+    <addaction name="MenuSettings"/>
+   </widget>
    <addaction name="menu"/>
+   <addaction name="menu_3"/>
+   <addaction name="menu_2"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <action name="MenuOpenProject">
@@ -97,28 +112,12 @@
     <string>Ctrl+O</string>
    </property>
   </action>
-  <action name="MenuNewProject">
-   <property name="text">
-    <string>Новый</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+N</string>
-   </property>
-  </action>
   <action name="MenuSaveProject">
    <property name="text">
     <string>Сохранить</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+S</string>
-   </property>
-  </action>
-  <action name="MenuSaveProjectAs">
-   <property name="text">
-    <string>Сохранить как...</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+Shift+S</string>
    </property>
   </action>
   <action name="MenuCloseProject">
@@ -146,6 +145,27 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+I</string>
+   </property>
+  </action>
+  <action name="MenuSettings">
+   <property name="text">
+    <string>Настройки...</string>
+   </property>
+   <property name="toolTip">
+    <string>Настройки</string>
+   </property>
+  </action>
+  <action name="MenuAbout">
+   <property name="text">
+    <string>О программе...</string>
+   </property>
+  </action>
+  <action name="MenuHelp">
+   <property name="text">
+    <string>Руководство...</string>
+   </property>
+   <property name="shortcut">
+    <string>F1</string>
    </property>
   </action>
  </widget>

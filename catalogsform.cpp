@@ -9,6 +9,15 @@ CatalogsForm::CatalogsForm(QWidget *parent) :
     ui->CatalogsTeachersTable->setColumnHidden(0,true);
     ui->CatalogsClassesTable->setColumnHidden(0,true);
     ui->CatalogsRoomsTable->setColumnHidden(0,true);
+    QFileInfo fin(QApplication::arguments()[0]);
+    sett = new QSettings(fin.absolutePath() + "\\settings.ini",QSettings::IniFormat);
+    if(!sett->contains("PathToSave"))
+    {
+        QMessageBox::information(0,tr("Конфигурация не определнна"), tr("Файл конфигурации не найден или поврежден!<br>"
+                                                                       "Пожалуйста произведите настройку программы."),QMessageBox::Ok);
+        SettingsForm* sf = new SettingsForm(0);
+        sf->show();
+    }
 }
 
 CatalogsForm::~CatalogsForm()
@@ -319,36 +328,6 @@ void CatalogsForm::on_ChairsSearchLine_textEdited(const QString &arg1)
 void CatalogsForm::on_ChairsSearchInCombo_currentIndexChanged(int index)
 {
     on_ChairsSearchLine_textEdited((ui->ChairsSearchLine->text()));
-}
-
-
-void CatalogsForm::on_CatalogsClassesTable_cellDoubleClicked(int row, int column)
-{
-    QTime timer;
-    timer.start();
-    QPrinter printer(QPrinter::HighResolution);
-    printer.setOutputFormat(QPrinter::PdfFormat);
-    printer.setColorMode(QPrinter::GrayScale);
-    printer.setOrientation(QPrinter::Landscape);
-    printer.setPageSize(QPrinter::A4);
-    QDir d;
-    if(!d.exists("..\\Расписание\\Группы\\"))
-        d.mkpath("..\\Расписание\\Группы\\");
-    printer.setOutputFileName("..\\Расписание\\Группы\\" + ui->CatalogsClassesTable->item(row,1)->text() + ".pdf");
-    QPainter painter;
-    if(!painter.begin(&printer))
-    {
-        qWarning("Falied");
-        return;
-    }
-
-    drawSchedule(painter, printer.pageRect(),"class",row);
-
-    painter.end();
-
-
-    QMessageBox::information(this,tr("Информация"),tr("Экспорт завершен!"),QMessageBox::Ok);
-    qDebug()<<"Time elapsed: "<<timer.elapsed();
 }
 
 void CatalogsForm::drawSchedule(QPainter &painter,QRect pageRect, QString type, int row)
@@ -1082,6 +1061,37 @@ QFont CatalogsForm::fillRect(QString& str,QRect &rect, int flags, QFont &font)
 }
 
 
+
+void CatalogsForm::on_CatalogsClassesTable_cellDoubleClicked(int row, int column)
+{
+    QTime timer;
+    timer.start();
+    QPrinter printer(QPrinter::HighResolution);
+    printer.setOutputFormat(QPrinter::PdfFormat);
+    printer.setColorMode(QPrinter::GrayScale);
+    printer.setOrientation(QPrinter::Landscape);
+    printer.setPageSize(QPrinter::A4);
+    QDir d;
+    if(!d.exists(sett->value("PathToSave").toString() + "\\Расписание\\Группы\\"))
+        d.mkpath(sett->value("PathToSave").toString() + "\\Расписание\\Группы\\");
+    printer.setOutputFileName(sett->value("PathToSave").toString() + "\\Расписание\\Группы\\" + ui->CatalogsClassesTable->item(row,1)->text() + ".pdf");
+    QPainter painter;
+    if(!painter.begin(&printer))
+    {
+        qWarning("Falied");
+        return;
+    }
+
+    drawSchedule(painter, printer.pageRect(),"class",row);
+
+    painter.end();
+
+
+    QMessageBox::information(this,tr("Информация"),tr("Экспорт завершен!"),QMessageBox::Ok);
+    qDebug()<<"Time elapsed: "<<timer.elapsed();
+}
+
+
 void CatalogsForm::on_ExportAllClassesButton_clicked()
 {
 
@@ -1099,9 +1109,9 @@ void CatalogsForm::on_ExportAllClassesButton_clicked()
         printer.setOrientation(QPrinter::Landscape);
         printer.setPageSize(QPrinter::A4);
         QDir d;
-        if(!d.exists("..\\Расписание\\Группы\\"))
-            d.mkpath("..\\Расписание\\Группы\\");
-        printer.setOutputFileName("..\\Расписание\\Группы\\" + ui->CatalogsClassesTable->item(i,1)->text() + ".pdf");
+        if(!d.exists(sett->value("PathToSave").toString() + "\\Расписание\\Группы\\"))
+            d.mkpath(sett->value("PathToSave").toString() + "\\Расписание\\Группы\\");
+        printer.setOutputFileName(sett->value("PathToSave").toString() + "\\Расписание\\Группы\\" + ui->CatalogsClassesTable->item(i,1)->text() + ".pdf");
         QPainter painter;
         if(!painter.begin(&printer))
         {
@@ -1128,9 +1138,9 @@ void CatalogsForm::on_CatalogsTeachersTable_cellDoubleClicked(int row, int colum
     printer.setOrientation(QPrinter::Landscape);
     printer.setPageSize(QPrinter::A4);
     QDir d;
-    if(!d.exists("..\\Расписание\\Преподаватели\\"))
-        d.mkpath("..\\Расписание\\Преподаватели\\");
-    printer.setOutputFileName("..\\Расписание\\Преподаватели\\" + ui->CatalogsTeachersTable->item(row,1)->text() + ".pdf");
+    if(!d.exists(sett->value("PathToSave").toString() + "\\Расписание\\Преподаватели\\"))
+        d.mkpath(sett->value("PathToSave").toString() + "\\Расписание\\Преподаватели\\");
+    printer.setOutputFileName(sett->value("PathToSave").toString() + "\\Расписание\\Преподаватели\\" + ui->CatalogsTeachersTable->item(row,1)->text() + ".pdf");
     QPainter painter;
     if(!painter.begin(&printer))
     {
@@ -1164,9 +1174,9 @@ void CatalogsForm::on_ExportAllTeachersButton_clicked()
         printer.setOrientation(QPrinter::Landscape);
         printer.setPageSize(QPrinter::A4);
         QDir d;
-        if(!d.exists("..\\Расписание\\Преподаватели\\"))
-            d.mkpath("..\\Расписание\\Преподаватели\\");
-        printer.setOutputFileName("..\\Расписание\\Преподаватели\\" + ui->CatalogsTeachersTable->item(i,1)->text() + ".pdf");
+        if(!d.exists(sett->value("PathToSave").toString() + "\\Расписание\\Преподаватели\\"))
+            d.mkpath(sett->value("PathToSave").toString() + "\\Расписание\\Преподаватели\\");
+        printer.setOutputFileName(sett->value("PathToSave").toString() + "\\Расписание\\Преподаватели\\" + ui->CatalogsTeachersTable->item(i,1)->text() + ".pdf");
         QPainter painter;
         if(!painter.begin(&printer))
         {
@@ -1201,9 +1211,9 @@ void CatalogsForm::on_ExportSelectedClassesButton_clicked()
         printer.setOrientation(QPrinter::Landscape);
         printer.setPageSize(QPrinter::A4);
         QDir d;
-        if(!d.exists("..\\Расписание\\Группы\\"))
-            d.mkpath("..\\Расписание\\Группы\\");
-        printer.setOutputFileName("..\\Расписание\\Группы\\" + ui->CatalogsClassesTable->item(selectedClasses[i]->row(),1)->text() + ".pdf");
+        if(!d.exists(sett->value("PathToSave").toString() + "\\Расписание\\Группы\\"))
+            d.mkpath(sett->value("PathToSave").toString() + "\\Расписание\\Группы\\");
+        printer.setOutputFileName(sett->value("PathToSave").toString() + "\\Расписание\\Группы\\" + ui->CatalogsClassesTable->item(selectedClasses[i]->row(),1)->text() + ".pdf");
         QPainter painter;
         if(!painter.begin(&printer))
         {
@@ -1230,12 +1240,12 @@ void CatalogsForm::on_CatalogsRoomsTable_cellDoubleClicked(int row, int column)
     printer.setOrientation(QPrinter::Landscape);
     printer.setPageSize(QPrinter::A4);
     QDir d;
-    if(!d.exists("..\\Расписание\\Аудитории\\"))
-        d.mkpath("..\\Расписание\\Аудитории\\");
+    if(!d.exists(sett->value("PathToSave").toString() + "\\Расписание\\Аудитории\\"))
+        d.mkpath(sett->value("PathToSave").toString() + "\\Расписание\\Аудитории\\");
     QString str = ui->CatalogsRoomsTable->item(row,1)->text();
     while(str.contains('/'))
         str.replace(str.indexOf('/'),1,'-');
-    printer.setOutputFileName("..\\Расписание\\Аудитории\\" + str + ".pdf");
+    printer.setOutputFileName(sett->value("PathToSave").toString() + "\\Расписание\\Аудитории\\" + str + ".pdf");
     QPainter painter;
     if(!painter.begin(&printer))
     {
@@ -1269,9 +1279,9 @@ void CatalogsForm::on_ExportAllRoomsButton_clicked()
         printer.setOrientation(QPrinter::Landscape);
         printer.setPageSize(QPrinter::A4);
         QDir d;
-        if(!d.exists("..\\Расписание\\Аудитории\\"))
-            d.mkpath("..\\Расписание\\Аудитории\\");
-        printer.setOutputFileName("..\\Расписание\\Аудитории\\" + ui->CatalogsRoomsTable->item(i,1)->text() + ".pdf");
+        if(!d.exists(sett->value("PathToSave").toString() + "\\Расписание\\Аудитории\\"))
+            d.mkpath(sett->value("PathToSave").toString() + "\\Расписание\\Аудитории\\");
+        printer.setOutputFileName(sett->value("PathToSave").toString() + "\\Расписание\\Аудитории\\" + ui->CatalogsRoomsTable->item(i,1)->text() + ".pdf");
         QPainter painter;
         if(!painter.begin(&printer))
         {
@@ -1306,9 +1316,9 @@ void CatalogsForm::on_ExportSelectedRoomsPutton_clicked()
         printer.setOrientation(QPrinter::Landscape);
         printer.setPageSize(QPrinter::A4);
         QDir d;
-        if(!d.exists("..\\Расписание\\Аудитории\\"))
-            d.mkpath("..\\Расписание\\Аудитории\\");
-        printer.setOutputFileName("..\\Расписание\\Аудитории\\" + ui->CatalogsRoomsTable->item(selectedRooms[i]->row(),1)->text() + ".pdf");
+        if(!d.exists(sett->value("PathToSave").toString() + "\\Расписание\\Аудитории\\"))
+            d.mkpath(sett->value("PathToSave").toString() + "\\Расписание\\Аудитории\\");
+        printer.setOutputFileName(sett->value("PathToSave").toString() + "\\Расписание\\Аудитории\\" + ui->CatalogsRoomsTable->item(selectedRooms[i]->row(),1)->text() + ".pdf");
         QPainter painter;
         if(!painter.begin(&printer))
         {
@@ -1342,9 +1352,9 @@ void CatalogsForm::on_ExporttSelectedTeachersButton_clicked()
         printer.setOrientation(QPrinter::Landscape);
         printer.setPageSize(QPrinter::A4);
         QDir d;
-        if(!d.exists("..\\Расписание\\Преподаватели\\"))
-            d.mkpath("..\\Расписание\\Преподаватели\\");
-        printer.setOutputFileName("..\\Расписание\\Преподаватели\\" + ui->CatalogsTeachersTable->item(selectedTeachers[i]->row(),1)->text() + ".pdf");
+        if(!d.exists(sett->value("PathToSave").toString() + "\\Расписание\\Преподаватели\\"))
+            d.mkpath(sett->value("PathToSave").toString() + "\\Расписание\\Преподаватели\\");
+        printer.setOutputFileName(sett->value("PathToSave").toString() + "\\Расписание\\Преподаватели\\" + ui->CatalogsTeachersTable->item(selectedTeachers[i]->row(),1)->text() + ".pdf");
         QPainter painter;
         if(!painter.begin(&printer))
         {

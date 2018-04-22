@@ -16,7 +16,7 @@ RC_ICONS = Icon.ico
 VERSION = 0.0.0.1
 QMAKE_TARGET_COMPANY = "lex1133's Software"
 QMAKE_TARGET_PRODUCT = "Schedule v2.0"
-QMAKE_TARGET_DESCRIPTION = "Программа для печати и оперативного изменения расписания"
+QMAKE_TARGET_DESCRIPTION = "пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ"
 QMAKE_TARGET_COPYRIGHT = "Copyright"
 
 DEFINES += QT_DEPRECATED_WARNINGS
@@ -33,7 +33,8 @@ SOURCES += \
     xmlparser.cpp \
     catalogsform.cpp \
     scheduleform.cpp \
-    bookaudienceform.cpp
+    bookaudienceform.cpp \
+    settingsform.cpp
 
 HEADERS += \
         mainwindow.h \
@@ -41,13 +42,15 @@ HEADERS += \
     xmlparser.h \
     catalogsform.h \
     scheduleform.h \
-    bookaudienceform.h
+    bookaudienceform.h \
+    settingsform.h
 
 FORMS += \
         mainwindow.ui \
     catalogsform.ui \
     scheduleform.ui \
-    bookaudienceform.ui
+    bookaudienceform.ui \
+    settingsform.ui
 
 
 RESOURCES += \
