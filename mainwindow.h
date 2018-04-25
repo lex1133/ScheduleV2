@@ -4,6 +4,7 @@
 #include "xmlparser.h"
 #include "catalogsform.h"
 #include "settingsform.h"
+#include "previousprojects.h"
 
 #include <QMainWindow>
 #include <QMessageBox>
@@ -35,8 +36,6 @@ private slots:
     void on_MenuOpenProject_triggered();
 
     void on_MenuSaveProject_triggered();
-
-    void on_MenuImportFile_triggered();
 
     void on_MenuCloseProject_triggered();
 

@@ -199,7 +199,7 @@ void ScheduleForm::updateTable()
 
                 sumInfo += StudyTypeObj.value(1).toString();
                 ui->ScheduleTable->item(query->value(1).toInt()-1,query->value(2).toInt()-1)->setText(sumInfo);
-                ui->ScheduleTable->item(query->value(1).toInt()-1,query->value(2).toInt()-1)->setBackground(Qt::red);
+                ui->ScheduleTable->item(query->value(1).toInt()-1,query->value(2).toInt()-1)->setBackground(QColor(255,80,80));
             }
 
 
@@ -234,7 +234,7 @@ void ScheduleForm::updateTable()
                         if(!query->value(5).toString().isEmpty())
                         {
                             ui->ScheduleTable->item(i,j)->setText(teacher + "\n" + group + "\n" + reason);
-                            ui->ScheduleTable->item(i,j)->setBackground(Qt::blue);
+                            ui->ScheduleTable->item(i,j)->setBackground(QColor(0,102,255));
                         }
                     }
 
@@ -247,7 +247,7 @@ void ScheduleForm::updateTable()
                     if(ui->ScheduleTable->item(i,j-1) != nullptr)
                         if(ui->ScheduleTable->item(i,j-1)->text() == ui->ScheduleTable->item(i,j)->text()
                                 && !ui->ScheduleTable->item(i,j)->text().isEmpty() &&
-                                ui->ScheduleTable->item(i,j)->backgroundColor() != Qt::blue)
+                                ui->ScheduleTable->item(i,j)->backgroundColor() != QColor(0,102,255))
                             ui->ScheduleTable->setSpan(i,j-1,1,2);
                 }
             }
@@ -389,7 +389,7 @@ void ScheduleForm::on_ScheduleTable_cellDoubleClicked(int row, int column)
         baf->show();
     }
 
-    if(ui->ScheduleTable->item(row,column)->backgroundColor() == Qt::blue)
+    if(ui->ScheduleTable->item(row,column)->backgroundColor() == QColor(0,102,255))
     {
         BookAudienceForm* baf = new BookAudienceForm();
         query->prepare("SELECT id FROM `Rooms` WHERE name=:roomName");
@@ -402,4 +402,9 @@ void ScheduleForm::on_ScheduleTable_cellDoubleClicked(int row, int column)
         baf->editAudience(this,this->db,this->query,query->value(0).toInt(),ui->WeekComboBox->currentIndex(),row,column);
         baf->show();
     }
+}
+
+void ScheduleForm::on_RefreshButton_clicked()
+{
+        updateTable();
 }

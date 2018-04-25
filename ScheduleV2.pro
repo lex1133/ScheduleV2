@@ -34,7 +34,8 @@ SOURCES += \
     catalogsform.cpp \
     scheduleform.cpp \
     bookaudienceform.cpp \
-    settingsform.cpp
+    settingsform.cpp \
+    previousprojects.cpp
 
 HEADERS += \
         mainwindow.h \
@@ -43,14 +44,16 @@ HEADERS += \
     catalogsform.h \
     scheduleform.h \
     bookaudienceform.h \
-    settingsform.h
+    settingsform.h \
+    previousprojects.h
 
 FORMS += \
         mainwindow.ui \
     catalogsform.ui \
     scheduleform.ui \
     bookaudienceform.ui \
-    settingsform.ui
+    settingsform.ui \
+    previousprojects.ui
 
 
 RESOURCES += \

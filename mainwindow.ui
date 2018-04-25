@@ -79,7 +79,6 @@
     <addaction name="MenuOpenProject"/>
     <addaction name="separator"/>
     <addaction name="MenuSaveProject"/>
-    <addaction name="MenuImportFile"/>
     <addaction name="separator"/>
     <addaction name="MenuCloseProject"/>
     <addaction name="separator"/>
@@ -134,17 +133,6 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+Q</string>
-   </property>
-  </action>
-  <action name="MenuImportFile">
-   <property name="text">
-    <string>Импорт...</string>
-   </property>
-   <property name="toolTip">
-    <string>Импорт</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+I</string>
    </property>
   </action>
   <action name="MenuSettings">

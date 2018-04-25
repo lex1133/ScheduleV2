@@ -39,6 +39,8 @@ private slots:
 
     void on_ScheduleTable_cellDoubleClicked(int row, int column);
 
+    void on_RefreshButton_clicked();
+
 private:
     QDate beginDate;
     QDate endDate;

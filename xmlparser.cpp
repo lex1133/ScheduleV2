@@ -19,6 +19,7 @@ bool XMLParser::GenerateBase()
 
         db = new QSqlDatabase(QSqlDatabase::addDatabase("QSQLITE"));
         db->setDatabaseName(check_file.absoluteFilePath());
+
         newbase = check_file.absoluteFilePath();
 
         if (db->open()) {

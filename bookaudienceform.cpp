@@ -108,6 +108,21 @@ void BookAudienceForm::editAudience(ScheduleForm* sform_,QSqlDatabase* db_,QSqlQ
     QCompleter *completer = new QCompleter(wordList, this);
     completer->setCaseSensitivity(Qt::CaseInsensitive);
     ui->teacherLine->setCompleter(completer);
+
+    QStringList wordList2;
+    if(!query->exec("SELECT * FROM `Classes`"))
+    {
+        qDebug()<<"Classes query falure";
+    }
+    while(query->next())
+    {
+        wordList2<<query->value(1).toString();
+    }
+
+    QCompleter *completer2 = new QCompleter(wordList2, this);
+    completer2->setCaseSensitivity(Qt::CaseInsensitive);
+    ui->classLine->setCompleter(completer2);
+
     query->prepare("SELECT * FROM `Reserved` WHERE room=:room AND week=:week AND day=:day AND hour=:hour");
     query->bindValue(":room",room);
     query->bindValue(":week",week);
@@ -118,7 +133,8 @@ void BookAudienceForm::editAudience(ScheduleForm* sform_,QSqlDatabase* db_,QSqlQ
         qDebug()<<"Reserver query falure";
     }
     query->next();
-    ui->teacherLine->setText(query->value(5).toString());
+    ui->teacherLine->setText(query->value(5).toString());    
+    ui->classLine->setText(query->value(6).toString());
     ui->reasonLine->setPlainText(query->value(7).toString());
     query->finish();
 }
@@ -136,7 +152,7 @@ void BookAudienceForm::on_OkPushButton_clicked()
     query->bindValue(":day",day);
     query->bindValue(":hour",hour);
     query->bindValue(":teacher",ui->teacherLine->text());
-    query->bindValue(":class","");
+    query->bindValue(":class",ui->classLine->text());
     query->bindValue(":reason",ui->reasonLine->toPlainText());
     if(!query->exec())
     {
