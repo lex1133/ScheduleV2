@@ -336,7 +336,7 @@ void CatalogsForm::drawSchedule(QPainter &painter,QRect pageRect, QString type, 
     int padding = 20;
     QList<int> verts;
     QList<int> hors;
-    v = pageRect.width() / 1000;
+    v = pageRect.width() / 1000.0;
     padding = v * 1.5;
     verts = QList<int>();
     hors = QList<int>();
