@@ -228,10 +228,10 @@ void ScheduleForm::updateTable()
                     if(numberOfRows > 0)
                     {
                         query->next();
-                        QString teacher = query->value(5).toString();
-                        QString group = query->value(6).toString();
-                        QString reason = query->value(7).toString();
-                        if(!query->value(5).toString().isEmpty())
+                        QString teacher = query->value(4).toString();
+                        QString group = query->value(5).toString();
+                        QString reason = query->value(6).toString();
+                        if(!query->value(4).toString().isEmpty())
                         {
                             ui->ScheduleTable->item(i,j)->setText(teacher + "\n" + group + "\n" + reason);
                             ui->ScheduleTable->item(i,j)->setBackground(QColor(0,102,255));
@@ -407,4 +407,40 @@ void ScheduleForm::on_ScheduleTable_cellDoubleClicked(int row, int column)
 void ScheduleForm::on_RefreshButton_clicked()
 {
         updateTable();
+}
+
+void ScheduleForm::on_ReservButton_clicked()
+{
+    if(ui->ScheduleTable->currentColumn() > -1 && ui->ScheduleTable->currentRow() > -1)
+    {
+        int column = ui->ScheduleTable->currentColumn();
+        int row = ui->ScheduleTable->currentRow();
+        if(ui->ScheduleTable->item(row,column)->text().isEmpty())
+        {
+            BookAudienceForm* baf = new BookAudienceForm();
+            query->prepare("SELECT id FROM `Rooms` WHERE name=:roomName");
+            query->bindValue(":roomName",ui->RoomsComboBox->currentText());
+            if(!query->exec())
+            {
+                qDebug()<<"Room query falure";
+            }
+            query->next();
+            baf->bookAudience(this,db,query,query->value(0).toInt(),ui->WeekComboBox->currentIndex(),row,column);
+            baf->show();
+        }
+
+        if(ui->ScheduleTable->item(row,column)->backgroundColor() == QColor(0,102,255))
+        {
+            BookAudienceForm* baf = new BookAudienceForm();
+            query->prepare("SELECT id FROM `Rooms` WHERE name=:roomName");
+            query->bindValue(":roomName",ui->RoomsComboBox->currentText());
+            if(!query->exec())
+            {
+                qDebug()<<"Room query falure";
+            }
+            query->next();
+            baf->editAudience(this,this->db,this->query,query->value(0).toInt(),ui->WeekComboBox->currentIndex(),row,column);
+            baf->show();
+        }
+    }
 }

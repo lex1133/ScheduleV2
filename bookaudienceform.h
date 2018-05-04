@@ -43,6 +43,7 @@ private:
     int day;
     int hour;
     int room;
+    bool edit = false;
 };
 
 #endif // BOOKAUDIENCEFORM_H

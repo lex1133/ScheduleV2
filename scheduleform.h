@@ -41,6 +41,8 @@ private slots:
 
     void on_RefreshButton_clicked();
 
+    void on_ReservButton_clicked();
+
 private:
     QDate beginDate;
     QDate endDate;

@@ -69,6 +69,7 @@ void BookAudienceForm::bookAudience(ScheduleForm* sform_,QSqlDatabase* db_,QSqlQ
 
 void BookAudienceForm::editAudience(ScheduleForm* sform_,QSqlDatabase* db_,QSqlQuery* query_, int room_, int week_, int day_, int hour_)
 {
+    edit = true;
     this->sform = sform_;
     this->room = room_;
     this->week = week_;
@@ -133,9 +134,9 @@ void BookAudienceForm::editAudience(ScheduleForm* sform_,QSqlDatabase* db_,QSqlQ
         qDebug()<<"Reserver query falure";
     }
     query->next();
-    ui->teacherLine->setText(query->value(5).toString());    
-    ui->classLine->setText(query->value(6).toString());
-    ui->reasonLine->setPlainText(query->value(7).toString());
+    ui->teacherLine->setText(query->value(4).toString());
+    ui->classLine->setText(query->value(5).toString());
+    ui->reasonLine->setPlainText(query->value(6).toString());
     query->finish();
 }
 
@@ -146,20 +147,36 @@ BookAudienceForm::~BookAudienceForm()
 
 void BookAudienceForm::on_OkPushButton_clicked()
 {
-    query->prepare("INSERT INTO `Reserved`(`room`,`week`,`day`,`hour`,`teacher`,`class`,`reason`) VALUES (:room,:week,:day,:hour,:teacher,:class,:reason)");
-    query->bindValue(":room",room);
-    query->bindValue(":week",week);
-    query->bindValue(":day",day);
-    query->bindValue(":hour",hour);
-    query->bindValue(":teacher",ui->teacherLine->text());
-    query->bindValue(":class",ui->classLine->text());
-    query->bindValue(":reason",ui->reasonLine->toPlainText());
+    if(!edit)
+    {
+        query->prepare("INSERT INTO `Reserved`(`room`,`week`,`day`,`hour`,`teacher`,`class`,`reason`) VALUES (:room,:week,:day,:hour,:teacher,:class,:reason)");
+        query->bindValue(":room",room);
+        query->bindValue(":week",week);
+        query->bindValue(":day",day);
+        query->bindValue(":hour",hour);
+        query->bindValue(":teacher",ui->teacherLine->text());
+        query->bindValue(":class",ui->classLine->text());
+        query->bindValue(":reason",ui->reasonLine->toPlainText());
+    }
+    else
+    {
+        query->prepare("UPDATE `Reserved` SET `teacher`=:teacher,`class`=:class,`reason`=:reason WHERE `room`=:room AND `week`=:week AND `day`=:day AND `hour`=:hour");
+        query->bindValue(":room",room);
+        query->bindValue(":week",week);
+        query->bindValue(":day",day);
+        query->bindValue(":hour",hour);
+        query->bindValue(":teacher",ui->teacherLine->text());
+        query->bindValue(":class",ui->classLine->text());
+        query->bindValue(":reason",ui->reasonLine->toPlainText());
+    }
+
     if(!query->exec())
     {
         qDebug()<<"Reserver query falure";
         qDebug()<<query->lastError();
     }
     query->finish();
+    edit = false;
     sform->updateTable();
     this->close();
 }

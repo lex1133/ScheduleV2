@@ -35,7 +35,7 @@ bool XMLParser::GenerateBase()
         query->exec("PRAGMA schema.journal_mode = MEMORY");
         query->exec("PRAGMA schema.synchronous = OFF");
         db->transaction();
-        query->exec("CREATE TABLE `Reserved` ( `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, `room` INTEGER NOT NULL, `week` INTEGER NOT NULL, `day` INTEGER NOT NULL, `hour` INTEGER NOT NULL, `teacher` TEXT NOT NULL, `class` TEXT, `reason` TEXT )");
+        query->exec("CREATE TABLE \"Reserved\" ( `room` INTEGER NOT NULL, `week` INTEGER NOT NULL, `day` INTEGER NOT NULL, `hour` INTEGER NOT NULL, `teacher` TEXT NOT NULL, `class` TEXT, `reason` TEXT, PRIMARY KEY(`room`,`week`,`day`,`hour`) )");
         query->exec("CREATE TABLE `Chairs` ( `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, `fullName` TEXT NOT NULL, `shortName` TEXT NOT NULL )");
         query->exec("CREATE TABLE \"Classes\" ( `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, `name` TEXT NOT NULL, `student` INTEGER NOT NULL, `semester` INTEGER NOT NULL, `work_hours` TEXT )");
         query->exec("CREATE TABLE `Holidays` ( `day` TEXT )");

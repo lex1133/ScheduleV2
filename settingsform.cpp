@@ -44,6 +44,7 @@ void SettingsForm::defaultSettings()
     QDir dir(fin.absolutePath());
     dir.cdUp();
     sett->setValue("PathToSave", dir.absolutePath());
+    sett->setValue("PrevPath", "none");
 }
 
 void SettingsForm::on_ResetSettingsButton_clicked()

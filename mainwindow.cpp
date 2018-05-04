@@ -7,8 +7,8 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
     ui->centralWidget->setEnabled(false);
-    PreviousProjects* prp = new PreviousProjects(0);
-    prp->show();
+    //PreviousProjects* prp = new PreviousProjects(0);
+    //prp->show();
     if(QApplication::arguments().size() > 1)
     {
         QFile argFile(QApplication::arguments()[1]);
@@ -98,8 +98,12 @@ MainWindow::~MainWindow()
 
 void MainWindow::OpenProject()
 {
+
+    QFileInfo fin(QApplication::arguments()[0]);
+    QSettings* sett = new QSettings(fin.absolutePath() + "\\settings.ini",QSettings::IniFormat);
+
     auto fileName = QFileDialog::getOpenFileName(this,
-                                                 tr("Открыть расписание"), "" , tr("Файл расписания (*.scdb *.xml)"));
+                                                 tr("Открыть расписание"), sett->value("PrevPath").toString() , tr("Файл расписания (*.scdb *.xml)"));
     if(!fileName.isEmpty())
     {
         QFile argFile(fileName);
@@ -137,6 +141,7 @@ void MainWindow::OpenProject()
             else
             {
                 curProject = fileName;
+                sett->setValue("PrevPath",argFin.absolutePath());
                 QTime t;
                 t.start();
                 QFileInfo fin(*file);

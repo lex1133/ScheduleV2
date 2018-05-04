@@ -139,6 +139,13 @@
      </column>
     </widget>
    </item>
+   <item row="3" column="0">
+    <widget class="QPushButton" name="RefreshButton">
+     <property name="text">
+      <string>Обновить</string>
+     </property>
+    </widget>
+   </item>
    <item row="0" column="0">
     <layout class="QHBoxLayout" name="horizontalLayout_2">
      <item>
@@ -230,9 +237,9 @@
     </layout>
    </item>
    <item row="2" column="0">
-    <widget class="QPushButton" name="RefreshButton">
+    <widget class="QPushButton" name="ReservButton">
      <property name="text">
-      <string>Обновить</string>
+      <string>Бронирование выделенной ячейки</string>
      </property>
     </widget>
    </item>
