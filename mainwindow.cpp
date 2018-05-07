@@ -112,24 +112,15 @@ void MainWindow::OpenProject()
         {
             if(curProject != "" && curProject != fileName)
             {
-                auto answer = QMessageBox::warning(this,tr("Подтверждение закрытия"),tr("Сохранить текущее расписание?"),
+                auto answer = QMessageBox::warning(this,tr("Подтверждение закрытия"),tr("Закрыть?"),
                                                    QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel , QMessageBox::Cancel);
-                if(answer == QMessageBox::Yes)
+                if(answer == QMessageBox::No)
                 {
-                    if(SaveProject(curProject))
-                    {
-
-                    }
-                    else
-                    {
-                        QMessageBox::critical(this,tr("Ошибка"),tr("Невозможно сохранить базу данных"), QMessageBox::Ok);
-                        return;
-                    }
-
+                    return;
                 }
-                else if(answer == QMessageBox::No)
+                else if(answer == QMessageBox::Cancel)
                 {
-
+                    return;
                 }
             }
 
@@ -190,29 +181,22 @@ void MainWindow::OpenProject()
                 ui->statusBar->showMessage("Загрузка XML прошла успешно!",1500);
                 if(curProject != "" && curProject != db.databaseName())
                 {
-                    auto answer = QMessageBox::warning(this,tr("Подтверждение закрытия"),tr("Сохранить текущее расписание?"),
+                    auto answer = QMessageBox::warning(this,tr("Подтверждение закрытия"),tr("Закрыть?"),
                                                        QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel , QMessageBox::Cancel);
-                    if(answer == QMessageBox::Yes)
+                    if(answer == QMessageBox::No)
                     {
-                        if(SaveProject(curProject))
-                        {
-
-                        }
-                        else
-                        {
-                            QMessageBox::critical(this,tr("Ошибка"),tr("Невозможно сохранить базу данных"), QMessageBox::Ok);
-                            return;
-                        }
-
+                        return;
                     }
-                    else if(answer == QMessageBox::No)
+                    else if(answer == QMessageBox::Cancel)
                     {
-
+                        return;
                     }
                 }
                 query = QSqlQuery(db);
 
                 curProject = db.databaseName();
+
+                sett->setValue("PrevPath",argFin.absolutePath());
                 if(ui->CatalogsTab->loadCatalogs(&db,&query) && ui->ScheduleTab->loadSchedule(&db,&query))
                 {
                     ui->centralWidget->setEnabled(true);
@@ -230,7 +214,7 @@ void MainWindow::OpenProject()
 
 bool MainWindow::SaveProject(QString fileName)
 {
-	return true;
+    return true;
 }
 
 
@@ -239,43 +223,22 @@ void MainWindow::on_MenuOpenProject_triggered()
     OpenProject();
 }
 
-void MainWindow::on_MenuSaveProject_triggered()
-{
-    SaveProject(curProject);
-}
-
 void MainWindow::on_MenuExitApp_triggered()
 {
-    auto answer = QMessageBox::warning(this,tr("Подтверждение выхода"),tr("Сохранить текущее расписание?"),
+    auto answer = QMessageBox::warning(this,tr("Подтверждение выхода"),tr("Выйти?"),
                                        QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel , QMessageBox::Cancel);
     if(answer == QMessageBox::Yes)
     {
-        if(SaveProject(curProject))
-        {
-            QApplication::exit(0);
-        }
-    }
-    else if(answer == QMessageBox::No)
-    {
         QApplication::exit(0);
     }
+
 }
 
 void MainWindow::on_MenuCloseProject_triggered()
 {
-    auto answer = QMessageBox::warning(this,tr("Подтверждение закрытия"),tr("Сохранить текущее расписание?"),
+    auto answer = QMessageBox::warning(this,tr("Подтверждение закрытия"),tr("Закрыть?"),
                                        QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel , QMessageBox::Cancel);
     if(answer == QMessageBox::Yes)
-    {
-        if(SaveProject(curProject))
-        {
-            ui->CatalogsTab->closeCatalogs();
-            ui->ScheduleTab->closeSchedule();
-            ui->tabWidget->setCurrentIndex(0);
-            ui->centralWidget->setEnabled(false);
-        }
-    }
-    else if(answer == QMessageBox::No)
     {
         ui->CatalogsTab->closeCatalogs();
         ui->ScheduleTab->closeSchedule();
@@ -296,4 +259,16 @@ void MainWindow::on_MenuSettings_triggered()
 {
     SettingsForm* sf = new SettingsForm(0);
     sf->show();
+}
+
+void MainWindow::on_MenuHelp_triggered()
+{
+    InfoWidget* iw = new InfoWidget();
+    iw->show();
+}
+
+void MainWindow::on_MenuDownloadLatest_triggered()
+{
+
+    QDesktopServices::openUrl(QUrl("https://github.com/lex1133/ScheduleV2/releases"));
 }

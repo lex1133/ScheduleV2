@@ -14,7 +14,7 @@ CatalogsForm::CatalogsForm(QWidget *parent) :
     if(!sett->contains("PathToSave"))
     {
         QMessageBox::information(0,tr("Конфигурация не определнна"), tr("Файл конфигурации не найден или поврежден!<br>"
-                                                                       "Пожалуйста произведите настройку программы."),QMessageBox::Ok);
+                                                                        "Пожалуйста произведите настройку программы."),QMessageBox::Ok);
         SettingsForm* sf = new SettingsForm(0);
         sf->show();
     }
@@ -1071,24 +1071,28 @@ void CatalogsForm::on_CatalogsClassesTable_cellDoubleClicked(int row, int column
     printer.setColorMode(QPrinter::GrayScale);
     printer.setOrientation(QPrinter::Landscape);
     printer.setPageSize(QPrinter::A4);
-    QDir d;
-    if(!d.exists(sett->value("PathToSave").toString() + "\\Расписание\\Группы\\"))
-        d.mkpath(sett->value("PathToSave").toString() + "\\Расписание\\Группы\\");
-    printer.setOutputFileName(sett->value("PathToSave").toString() + "\\Расписание\\Группы\\" + ui->CatalogsClassesTable->item(row,1)->text() + ".pdf");
-    QPainter painter;
-    if(!painter.begin(&printer))
-    {
-        qWarning("Falied");
-        return;
-    }
 
-    drawSchedule(painter, printer.pageRect(),"class",row);
+        QDir d;
+        if(!d.exists(sett->value("PathToSave").toString() + "\\Расписание\\Группы\\"))
+            d.mkpath(sett->value("PathToSave").toString() + "\\Расписание\\Группы\\");
+        printer.setOutputFileName(sett->value("PathToSave").toString() + "\\Расписание\\Группы\\" + ui->CatalogsClassesTable->item(row,1)->text() + ".pdf");
+        QPainter painter;
+        if(!painter.begin(&printer))
+        {
+            qWarning("Falied");
+            return;
+        }
 
-    painter.end();
+        drawSchedule(painter, printer.pageRect(),"class",row);
 
+        painter.end();
 
-    QMessageBox::information(this,tr("Информация"),tr("Экспорт завершен!"),QMessageBox::Ok);
-    qDebug()<<"Time elapsed: "<<timer.elapsed();
+        QPrintDialog *PrtDialog;
+        PrtDialog=new QPrintDialog(&printer);
+        PrtDialog->show();
+        QMessageBox::information(this,tr("Информация"),tr("Экспорт завершен!"),QMessageBox::Ok);
+        qDebug()<<"Time elapsed: "<<timer.elapsed();
+
 }
 
 

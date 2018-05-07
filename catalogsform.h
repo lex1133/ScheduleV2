@@ -14,6 +14,8 @@
 #include <QtSql>
 #include <QPainter>
 #include <QPrinter>
+#include <QPrintDialog>
+#include <QTextEdit>
 #include <QDate>
 #include <QScreen>
 #include <QDir>

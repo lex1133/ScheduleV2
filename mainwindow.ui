@@ -78,10 +78,7 @@
     </property>
     <addaction name="MenuOpenProject"/>
     <addaction name="separator"/>
-    <addaction name="MenuSaveProject"/>
-    <addaction name="separator"/>
     <addaction name="MenuCloseProject"/>
-    <addaction name="separator"/>
     <addaction name="separator"/>
     <addaction name="MenuExitApp"/>
    </widget>
@@ -91,6 +88,7 @@
     </property>
     <addaction name="MenuAbout"/>
     <addaction name="MenuHelp"/>
+    <addaction name="MenuDownloadLatest"/>
    </widget>
    <widget class="QMenu" name="menu_3">
     <property name="title">
@@ -109,14 +107,6 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+O</string>
-   </property>
-  </action>
-  <action name="MenuSaveProject">
-   <property name="text">
-    <string>Сохранить</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+S</string>
    </property>
   </action>
   <action name="MenuCloseProject">
@@ -154,6 +144,11 @@
    </property>
    <property name="shortcut">
     <string>F1</string>
+   </property>
+  </action>
+  <action name="MenuDownloadLatest">
+   <property name="text">
+    <string>Скачать последнюю версию программы...</string>
    </property>
   </action>
  </widget>

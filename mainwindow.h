@@ -5,8 +5,10 @@
 #include "catalogsform.h"
 #include "settingsform.h"
 #include "previousprojects.h"
+#include "infowidget.h"
 
 #include <QMainWindow>
+#include <QDesktopServices>
 #include <QMessageBox>
 #include <QtXml>
 #include <QFile>
@@ -35,13 +37,15 @@ private slots:
 
     void on_MenuOpenProject_triggered();
 
-    void on_MenuSaveProject_triggered();
-
     void on_MenuCloseProject_triggered();
 
     void on_MenuAbout_triggered();
 
     void on_MenuSettings_triggered();
+
+    void on_MenuHelp_triggered();
+
+    void on_MenuDownloadLatest_triggered();
 
 private:
     Ui::MainWindow *ui;
