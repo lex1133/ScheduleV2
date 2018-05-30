@@ -209,9 +209,19 @@
         </widget>
        </item>
        <item row="2" column="0" colspan="2">
-        <widget class="QPushButton" name="ExporttSelectedTeachersButton">
+        <widget class="QPushButton" name="ExportSelectedTeachersButton">
          <property name="text">
           <string>Экпортировать расписание выделеных преподавателей в PDF</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="0">
+        <widget class="QPushButton" name="ExportToGoogle">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="text">
+          <string>Экспорт в формат Google календаря</string>
          </property>
         </widget>
        </item>
@@ -304,6 +314,13 @@
        <string>Кафедры</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout_2">
+       <item row="2" column="0" colspan="4">
+        <widget class="QPushButton" name="ExportSelectedChairs">
+         <property name="text">
+          <string>Экпортировать расписание выделенных кафедр</string>
+         </property>
+        </widget>
+       </item>
        <item row="0" column="3">
         <widget class="QComboBox" name="ChairsSearchInCombo">
          <item>
@@ -375,6 +392,11 @@
          </attribute>
          <column>
           <property name="text">
+           <string>id</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
            <string>Полное название кафедры</string>
           </property>
          </column>
@@ -383,6 +405,13 @@
            <string>Сокращенное название кафедры</string>
           </property>
          </column>
+        </widget>
+       </item>
+       <item row="3" column="0" colspan="4">
+        <widget class="QPushButton" name="ExportAllChairs">
+         <property name="text">
+          <string>Экпортировать расписание всех кафедр</string>
+         </property>
         </widget>
        </item>
       </layout>

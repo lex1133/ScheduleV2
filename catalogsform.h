@@ -112,6 +112,7 @@ private slots:
     void on_ExportAllRoomsButton_clicked();
     void on_ExportSelectedRoomsPutton_clicked();
     void on_ExporttSelectedTeachersButton_clicked();
+    void on_ExportToGoogle_clicked();
 };
 
 

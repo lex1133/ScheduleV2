@@ -9,6 +9,7 @@ CatalogsForm::CatalogsForm(QWidget *parent) :
     ui->CatalogsTeachersTable->setColumnHidden(0,true);
     ui->CatalogsClassesTable->setColumnHidden(0,true);
     ui->CatalogsRoomsTable->setColumnHidden(0,true);
+    ui->CatalogsChairsTable->setColumnHidden(0,true);
     QFileInfo fin(QApplication::arguments()[0]);
     sett = new QSettings(fin.absolutePath() + "\\settings.ini",QSettings::IniFormat);
     if(!sett->contains("PathToSave"))
@@ -87,8 +88,9 @@ void CatalogsForm::loadChairs()
     }
     ui->CatalogsChairsTable->setRowCount(numberOfRows);
     while (query->next()) {
-        ui->CatalogsChairsTable->setItem(query->value(0).toInt(),0, new QTableWidgetItem(query->value(1).toString()));
-        ui->CatalogsChairsTable->setItem(query->value(0).toInt(),1, new QTableWidgetItem(query->value(2).toString()));
+        ui->CatalogsChairsTable->setItem(query->value(0).toInt(),0, new QTableWidgetItem(query->value(0).toString()));
+        ui->CatalogsChairsTable->setItem(query->value(0).toInt(),1, new QTableWidgetItem(query->value(1).toString()));
+        ui->CatalogsChairsTable->setItem(query->value(0).toInt(),2, new QTableWidgetItem(query->value(2).toString()));
     }
 }
 
@@ -230,13 +232,6 @@ void CatalogsForm::loadClasses()
 
 }
 
-
-
-
-void CatalogsForm::on_CatalogsChairsTable_cellDoubleClicked(int row, int column)
-{
-
-}
 
 void CatalogsForm::on_SubjectsSearchLine_textEdited(const QString &arg1)
 {
@@ -1060,7 +1055,10 @@ QFont CatalogsForm::fillRect(QString& str,QRect &rect, int flags, QFont &font)
     return result;
 }
 
+void CatalogsForm::on_CatalogsChairsTable_cellDoubleClicked(int row, int column)
+{
 
+}
 
 void CatalogsForm::on_CatalogsClassesTable_cellDoubleClicked(int row, int column)
 {
@@ -1373,4 +1371,9 @@ void CatalogsForm::on_ExporttSelectedTeachersButton_clicked()
     progress.setValue(selectedTeachers.count()/3);
 
     QMessageBox::information(this,tr("Информация"),tr("Экспорт завершен!"),QMessageBox::Ok);
+}
+
+void CatalogsForm::on_ExportToGoogle_clicked()
+{
+
 }

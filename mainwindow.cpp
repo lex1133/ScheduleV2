@@ -108,7 +108,7 @@ void MainWindow::OpenProject()
     {
         QFile argFile(fileName);
         QFileInfo argFin(argFile);
-        if(argFin.completeSuffix() == "scdb")
+        if(argFin.completeSuffix().contains("scdb"))
         {
             if(curProject != "" && curProject != fileName)
             {
@@ -135,6 +135,9 @@ void MainWindow::OpenProject()
                 sett->setValue("PrevPath",argFin.absolutePath());
                 QTime t;
                 t.start();
+
+                ui->CatalogsTab->closeCatalogs();
+                ui->ScheduleTab->closeSchedule();
                 QFileInfo fin(*file);
 
                 db = QSqlDatabase::addDatabase("QSQLITE");
@@ -158,13 +161,15 @@ void MainWindow::OpenProject()
                 }
                 else
                 {
+                    ui->CatalogsTab->closeCatalogs();
+                    ui->ScheduleTab->closeSchedule();
                     QMessageBox::critical(this,tr("Ошибка"),tr("Невозможно загрузить базу данных"), QMessageBox::Ok);
                 }
 
                 qDebug("Time elapsed: %d ms", t.elapsed());
             }
         }
-        else if(argFin.completeSuffix() == "xml")
+        else if(argFin.completeSuffix().contains("xml"))
         {
             QFile* file = new QFile(argFin.absoluteFilePath());
             if (!file->open(QIODevice::ReadWrite | QIODevice::Text))
@@ -175,7 +180,10 @@ void MainWindow::OpenProject()
             {
 
                 QTime t;
-                t.start();
+                t.start();                
+
+                ui->CatalogsTab->closeCatalogs();
+                ui->ScheduleTab->closeSchedule();
                 ui->statusBar->showMessage("Идет загрузка XML...");
                 parser.ReadXMLData(file,&db,&query);
                 ui->statusBar->showMessage("Загрузка XML прошла успешно!",1500);
@@ -203,6 +211,8 @@ void MainWindow::OpenProject()
                 }
                 else
                 {
+                    ui->CatalogsTab->closeCatalogs();
+                    ui->ScheduleTab->closeSchedule();
                     QMessageBox::critical(this,tr("Ошибка"),tr("Невозможно загрузить базу данных"), QMessageBox::Ok);
                 }
                 qDebug("Time elapsed: %d ms", t.elapsed());
