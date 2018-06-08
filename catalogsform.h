@@ -3,6 +3,7 @@
 
 #include "xmlparser.h"
 #include "settingsform.h"
+#include "mainwindow.h"
 
 #include <QProgressDialog>
 #include <QWidget>
@@ -21,6 +22,8 @@
 #include <QDir>
 #include <math.h>
 
+class MainWindow;
+
 namespace Ui {
 class CatalogsForm;
 }
@@ -32,13 +35,14 @@ class CatalogsForm : public QWidget
 public:
     explicit CatalogsForm(QWidget *parent = 0);
     ~CatalogsForm();
-    bool loadCatalogs(QSqlDatabase* db_,QSqlQuery* query_);
+    bool loadCatalogs(MainWindow* mw_, QSqlDatabase* db_,QSqlQuery* query_);
     void closeCatalogs();
 
 private:
     Ui::CatalogsForm *ui;    
     QSqlDatabase* db;
     QSqlQuery* query;
+    MainWindow* mw;
     bool loadResult = true;
     QSettings* sett;
 

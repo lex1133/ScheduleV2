@@ -31,6 +31,8 @@ public:
     void OpenProject();
     bool SaveProject(QString fileName);
 
+    QString curProject;
+
 private slots:
 
     void on_MenuExitApp_triggered();
@@ -49,7 +51,6 @@ private slots:
 
 private:
     Ui::MainWindow *ui;
-    QString curProject;   
     XMLParser parser;
     QSqlDatabase db;
     QSqlQuery query;

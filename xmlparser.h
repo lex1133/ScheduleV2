@@ -24,7 +24,7 @@ public:
 
 private:
 
-    bool GenerateBase();
+    bool GenerateBase(QString xmlFile);
     void ReadTerm();
     void ReadTimes();
     void ReadHolidays();

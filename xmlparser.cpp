@@ -5,10 +5,9 @@ XMLParser::XMLParser()
 
 }
 
-bool XMLParser::GenerateBase()
+bool XMLParser::GenerateBase(QString xmlFile)
 {
-    auto fileName = QFileDialog::getSaveFileName(0,
-                                                 QObject::tr("Сохранить новую базу данных"), "" , QObject::tr("SCDB файл (*.scdb)"));
+    auto fileName = xmlFile.mid(0,xmlFile.length()-4) + ".scdb";
     if(!fileName.isEmpty())
     {
         QFileInfo check_file(fileName);
@@ -63,7 +62,7 @@ bool XMLParser::ReadXMLData(QFile* file,QSqlDatabase* db_,QSqlQuery* query_)
     this->db = db_;
     this->query = query_;
     xml.setDevice(file);
-    if(!GenerateBase())
+    if(!GenerateBase(file->fileName()))
         return false;
 
     db->transaction();

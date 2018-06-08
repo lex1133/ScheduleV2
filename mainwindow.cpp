@@ -9,76 +9,6 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->centralWidget->setEnabled(false);
     //PreviousProjects* prp = new PreviousProjects(0);
     //prp->show();
-    if(QApplication::arguments().size() > 1)
-    {
-        QFile argFile(QApplication::arguments()[1]);
-        QFileInfo argFin(argFile);
-        if(argFin.completeSuffix() == "scdb")
-        {
-            QFile* file = new QFile(argFin.absoluteFilePath());
-            if (!file->open(QIODevice::ReadWrite | QIODevice::Text))
-            {
-                QMessageBox::critical(this,tr("Ошибка"),tr("Невозможно открыть базу данных"), QMessageBox::Ok);
-            }
-            else
-            {
-                QTime t;
-                t.start();
-                QFileInfo fin(*file);
-                db = QSqlDatabase::addDatabase("QSQLITE");
-                db.setDatabaseName(fin.absoluteFilePath());
-                if (fin.isFile()) {
-                    if (db.open()) {
-                        qDebug()<<"[+] Connected to Database File";
-                    }
-                    else {
-                        qDebug()<<"[!] Database File was not opened";
-                    }
-                }
-                else {
-                    qDebug()<<"[!] Database File does not exist";
-                }
-                query = QSqlQuery(db);
-                if(ui->CatalogsTab->loadCatalogs(&db,&query) && ui->ScheduleTab->loadSchedule(&db,&query))
-                {
-                    ui->centralWidget->setEnabled(true);
-                }
-                else
-                {
-                    QMessageBox::critical(this,tr("Ошибка"),tr("Невозможно загрузить базу данных"), QMessageBox::Ok);
-                }
-
-                qDebug("Time elapsed: %d ms", t.elapsed());
-            }
-        }
-        else if(argFin.completeSuffix() == "xml")
-        {
-            QFile* file = new QFile(argFin.absoluteFilePath());
-            if (!file->open(QIODevice::ReadWrite | QIODevice::Text))
-            {
-                QMessageBox::critical(this,tr("Ошибка"),tr("Невозможно открыть XML-конфиг"), QMessageBox::Ok);
-            }
-            else
-            {
-
-                QTime t;
-                t.start();
-                ui->statusBar->showMessage("Идет загрузка XML...");
-                parser.ReadXMLData(file,&db,&query);
-                ui->statusBar->showMessage("Загрузка XML прошла успешно!",1500);
-                query = QSqlQuery(db);
-                if(ui->CatalogsTab->loadCatalogs(&db,&query) && ui->ScheduleTab->loadSchedule(&db,&query))
-                {
-                    ui->centralWidget->setEnabled(true);
-                }
-                else
-                {
-                    QMessageBox::critical(this,tr("Ошибка"),tr("Невозможно загрузить базу данных"), QMessageBox::Ok);
-                }
-                qDebug("Time elapsed: %d ms", t.elapsed());
-            }
-        }
-    }
     QFileInfo fin(QApplication::arguments()[0]);
     QSettings* sett = new QSettings(fin.absolutePath() + "\\settings.ini",QSettings::IniFormat);
     if(!sett->contains("PathToSave"))
@@ -103,12 +33,18 @@ void MainWindow::OpenProject()
     QSettings* sett = new QSettings(fin.absolutePath() + "\\settings.ini",QSettings::IniFormat);
 
     auto fileName = QFileDialog::getOpenFileName(this,
-                                                 tr("Открыть расписание"), sett->value("PrevPath").toString() , tr("Файл расписания (*.scdb *.xml)"));
+                                                 tr("Открыть расписание"), sett->value("PrevPath").toString() , tr("Файл расписания (*.xml)"));
     if(!fileName.isEmpty())
     {
+        QString check = fileName.mid(0,fileName.length()-4) + ".scdb";
+        if(QFileInfo(check).exists())
+        {
+            fileName = check;
+        }
         QFile argFile(fileName);
         QFileInfo argFin(argFile);
-        if(argFin.completeSuffix().contains("scdb"))
+
+        if(argFin.fileName().mid(argFin.fileName().length()-5,5) == ".scdb")
         {
             if(curProject != "" && curProject != fileName)
             {
@@ -131,7 +67,7 @@ void MainWindow::OpenProject()
             }
             else
             {
-                curProject = fileName;
+                curProject = argFin.fileName().mid(0,argFin.fileName().length()-5);
                 sett->setValue("PrevPath",argFin.absolutePath());
                 QTime t;
                 t.start();
@@ -155,7 +91,7 @@ void MainWindow::OpenProject()
                     qDebug()<<"[!] Database File does not exist";
                 }
                 query = QSqlQuery(db);
-                if(ui->CatalogsTab->loadCatalogs(&db,&query) && ui->ScheduleTab->loadSchedule(&db,&query))
+                if(ui->CatalogsTab->loadCatalogs(this,&db,&query) && ui->ScheduleTab->loadSchedule(&db,&query))
                 {
                     ui->centralWidget->setEnabled(true);
                 }
@@ -169,7 +105,7 @@ void MainWindow::OpenProject()
                 qDebug("Time elapsed: %d ms", t.elapsed());
             }
         }
-        else if(argFin.completeSuffix().contains("xml"))
+        else if(argFin.fileName().mid(argFin.fileName().length()-4,4) == ".xml")
         {
             QFile* file = new QFile(argFin.absoluteFilePath());
             if (!file->open(QIODevice::ReadWrite | QIODevice::Text))
@@ -202,10 +138,9 @@ void MainWindow::OpenProject()
                 }
                 query = QSqlQuery(db);
 
-                curProject = db.databaseName();
-
+                curProject = argFin.fileName().mid(0,argFin.fileName().length()-4);
                 sett->setValue("PrevPath",argFin.absolutePath());
-                if(ui->CatalogsTab->loadCatalogs(&db,&query) && ui->ScheduleTab->loadSchedule(&db,&query))
+                if(ui->CatalogsTab->loadCatalogs(this,&db,&query) && ui->ScheduleTab->loadSchedule(&db,&query))
                 {
                     ui->centralWidget->setEnabled(true);
                 }
