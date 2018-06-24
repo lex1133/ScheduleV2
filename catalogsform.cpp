@@ -932,12 +932,16 @@ void CatalogsForm::drawSchedTable(QPainter &painter, QList<int> &verts, QList<in
                 f = QFont("Arial",12*0.25);
             else if(schedObj[i][j].first > (hors[2]-hors[1])/2 && daySize >= 3)
                 f = QFont("Arial",12*0.25);
-            else if(schedObj[i][j].first > (hors[2]-hors[1])/2 && daySize == 1)
-                f = QFont("Arial",13*0.35);
             else if(schedObj[i][j].first > (hors[2]-hors[1])/2 && daySize == 2)
                 f = QFont("Arial",13*0.25);
+            else if(schedObj[i][j].first > (hors[2]-hors[1])/3 && daySize == 1)
+                f = QFont("Arial",13*0.5);
+            else if(schedObj[i][j].first > (hors[2]-hors[1])/2 && daySize == 1)
+                f = QFont("Arial",13*0.35);
+            else if(daySize > 2 && daySize < 5 && schedObj[i][j].first == 0)
+                f = QFont("Arial",13*0.5);
             else if(daySize == 1)
-                f = QFont("Arial",13*0.50);
+                f = QFont("Arial",13*0.65);
             else if(daySize == 2)
                 f = QFont("Arial",13*0.45);
             else if(daySize > 2 && daySize < 5)
@@ -956,6 +960,17 @@ void CatalogsForm::drawSchedTable(QPainter &painter, QList<int> &verts, QList<in
             {
                 if(!schedObj[i][j].second[k].name.isEmpty())
                 {
+                    if(schedObj[i][j].second[k].type != 2 && k > 0 && schedObj[i][j].second[k-1].type == 2)
+                    {
+                        if(schedObj[i][j].first > (hors[2]-hors[1])/3)
+                        {
+                            if(schedObj[i][j].second.size() - k == 1)
+                            {
+                                f = QFont("Arial",13*0.5);
+                                painter.setFont(f);
+                            }
+                        }
+                    }
                     if(k == 0 && schedObj[i][j].first != 0)
                     {
                         painter.drawLine(verts[2+j],hors[1+i],verts[2+j],hors[1+i]+schedObj[i][j].first+10);
@@ -963,6 +978,16 @@ void CatalogsForm::drawSchedTable(QPainter &painter, QList<int> &verts, QList<in
                         if(schedObj[i][j].second[k].type == 2 && schedObj[i][j].second[k].pair == true)
                             painter.drawLine(verts[2+j],hors[1+i]+schedObj[i][j].first+10,verts[j+3],hors[1+i]+schedObj[i][j].first+10);
                     }
+                    if(k>0)
+                        if(schedObj[i][j].first != 0 && schedObj[i][j].second[k].type != 2 &&  schedObj[i][j].second[k-1].type == 2)
+                        {
+                            if(schedObj[i][j].second[k-1].pair == true)
+                                painter.drawLine(verts[1+j],hors[1+i]+schedObj[i][j].first+10,verts[j+3],hors[1+i]+schedObj[i][j].first+10);
+                            else
+                                painter.drawLine(verts[1+j],hors[1+i]+schedObj[i][j].first+10,verts[j+2],hors[1+i]+schedObj[i][j].first+10);
+
+                            painter.drawLine(verts[2+j],hors[1+i]+schedObj[i][j].first+10,verts[2+j],hors[2+i]);
+                        }
                     QString curSub;
                     curSub.clear();
 
@@ -983,11 +1008,24 @@ void CatalogsForm::drawSchedTable(QPainter &painter, QList<int> &verts, QList<in
                     for(int date = 0; date < schedObj[i][j].second[k].dates.size(); date++)
                     {
                         if(schedObj[i][j].second[k].dates[date].first.toString("dd.MM") != schedObj[i][j].second[k].dates[date].second.toString("dd.MM"))
-                            curSub += schedObj[i][j].second[k].dates[date].first.toString("dd.MM") + " - " + schedObj[i][j].second[k].dates[date].second.toString("dd.MM") + " к.н.";
+                        {
+                            if(schedObj[i][j].second[k].dates[date].first.daysTo(schedObj[i][j].second[k].dates[date].second) > 7)
+                            {
+                                curSub += schedObj[i][j].second[k].dates[date].first.toString("dd.MM") + " - " + schedObj[i][j].second[k].dates[date].second.toString("dd.MM") + " к.н.";
+                            }
+                            else
+                            {
+                                curSub += schedObj[i][j].second[k].dates[date].first.toString("dd.MM") + ", " + schedObj[i][j].second[k].dates[date].second.toString("dd.MM");
+                            }
+
+
+                        }
                         else
+                        {
                             curSub += schedObj[i][j].second[k].dates[date].first.toString("dd.MM");
+                        }
                         if(date != schedObj[i][j].second[k].dates.size() -1)
-                            curSub += ",";
+                            curSub += ", ";
                     }
                     curSub += "]";
                     if(curSub != ". . . []")
@@ -1341,7 +1379,7 @@ void CatalogsForm::on_ExportSelectedRoomsPutton_clicked()
     QMessageBox::information(this,tr("Информация"),tr("Экспорт завершен!"),QMessageBox::Ok);
 }
 
-void CatalogsForm::on_ExporttSelectedTeachersButton_clicked()
+void CatalogsForm::on_ExportSelectedTeachersButton_clicked()
 {
     auto selectedTeachers = ui->CatalogsTeachersTable->selectedItems();
     QProgressDialog progress("Сохранение расписаний","Стоп", 0, selectedTeachers.count()/3, this);
@@ -1379,5 +1417,143 @@ void CatalogsForm::on_ExporttSelectedTeachersButton_clicked()
 
 void CatalogsForm::on_ExportToGoogle_clicked()
 {
+    db->transaction();
+    QVector<QVector<QPair<int,QVector<SubInfo>>>> schedObj;
+    schedObj.resize(6);
+    for(int i = 0; i < 6; i++)
+        schedObj[i].resize(8);
+    query->prepare("SELECT * FROM `Scheds` WHERE loadId IN (select loadId from `LoadGroups` where teacherId = :teacherId)");
+    query->bindValue(":teacherId", ui->CatalogsTeachersTable->item(ui->CatalogsTeachersTable->currentRow(),0)->text());
+    if(!query->exec())
+    {
+        qDebug()<<"Scheds query error!";
+        loadResult = false;
+        return;
+    }
+    while (query->next())
+    {
+        QSqlQuery LoadObj = QSqlQuery();
+        LoadObj.prepare("SELECT * FROM `Loads` WHERE id=:loadId");
+        LoadObj.bindValue(":loadId",query->value(4));
+        if(!LoadObj.exec())
+        {
+            qDebug()<<"Load query error!";
+            loadResult = false;
+            return;
+        }
+        LoadObj.next();
 
+        SubInfo tmp;
+        QDate beginDate = QDate::fromString(query->value(6).toString(),"yyyyMMdd");
+        QDate endDate = QDate::fromString(query->value(7).toString(),"yyyyMMdd");
+
+        QSqlQuery LoadGroupObj = QSqlQuery();
+        LoadGroupObj.prepare("SELECT * FROM `LoadGroups` WHERE loadId=:loadId");
+        int loadId = query->value(4).toInt();
+        LoadGroupObj.bindValue(":loadId",loadId);
+        if(!LoadGroupObj.exec())
+        {
+            qDebug()<<"LoadGroupObj query error!";
+            loadResult = false;
+            return;
+        }
+        int numberOfRows = 0;
+        if(LoadGroupObj.last())
+        {
+            numberOfRows =  LoadGroupObj.at() + 1;
+            LoadGroupObj.first();
+            LoadGroupObj.previous();
+        }
+        LoadGroupObj.next();
+
+        QSqlQuery SubjectObj = QSqlQuery();
+        SubjectObj.prepare("SELECT * FROM `Subjects` WHERE id=:subjectId");
+        SubjectObj.bindValue(":subjectId",LoadGroupObj.value(3));
+        if(!SubjectObj.exec())
+        {
+            qDebug()<<"SubjectObj query error!";
+            loadResult = false;
+            return;
+        }
+        SubjectObj.next();
+
+        QString subject = SubjectObj.value(1).toString();
+        tmp.name = subject;
+        tmp.type = LoadGroupObj.value(5).toInt();
+        tmp.groupsNum = numberOfRows;
+
+        QSqlQuery TeacherObj = QSqlQuery();
+        TeacherObj.prepare("SELECT klassIdList FROM `Loads` WHERE id=:loadId");
+        TeacherObj.bindValue(":loadId",query->value(4));
+        if(!TeacherObj.exec())
+        {
+            qDebug()<<"Load query error!";
+            loadResult = false;
+            return;
+        }
+        TeacherObj.next();
+        QStringList gr = TeacherObj.value(0).toString().split(" ");
+        for(int i = 0; i < gr.size(); i++)
+        {
+            if(gr[i] != "")
+            {
+                QSqlQuery GroupObj = QSqlQuery();
+                GroupObj.prepare("SELECT name FROM `Classes` WHERE id=:klassId");
+                GroupObj.bindValue(":klassId",gr[i]);
+                if(!GroupObj.exec())
+                {
+                    qDebug()<<"Group query error!";
+                    loadResult = false;
+                    return;
+                }
+                GroupObj.next();
+                tmp.teacher += GroupObj.value(0).toString() + " ";
+            }
+        }
+        if(LoadGroupObj.value(4).toString().size() > 0)
+        {
+
+            QSqlQuery RoomObj = QSqlQuery();
+            RoomObj.prepare("SELECT * FROM `Rooms` WHERE id=:roomId");
+            RoomObj.bindValue(":roomId",LoadGroupObj.value(4).toInt());
+            if(!RoomObj.exec())
+            {
+                qDebug()<<"RoomObj query error!";
+                loadResult = false;
+                return;
+            }
+            RoomObj.next();
+            tmp.room = RoomObj.value(1).toString();
+        }
+
+        QPair<QDate, QDate> date;
+        date.first = beginDate.addDays(query->value(1).toInt()-1);
+        date.second = endDate.addDays(-(6-(query->value(1).toInt()-1)));
+        tmp.dates.push_back(date);
+        tmp.group = QString::number(query->value(3).toInt());
+        bool f = false;
+        for(int sub = 0; sub < schedObj[query->value(1).toInt()-1][query->value(2).toInt()-1].second.size(); sub++)
+        {
+            auto tmp1 = schedObj[query->value(1).toInt()-1][query->value(2).toInt()-1].second[sub];
+            if(tmp1.equal(tmp))
+            {
+                schedObj[query->value(1).toInt()-1][query->value(2).toInt()-1].second[sub].dates.push_back(tmp.dates[0]);
+                std::sort(schedObj[query->value(1).toInt()-1][query->value(2).toInt()-1].second[sub].dates.begin(),schedObj[query->value(1).toInt()-1][query->value(2).toInt()-1].second[sub].dates.end(),
+                        [](const QPair<QDate,QDate>& x,const QPair<QDate,QDate>& y) -> bool
+                {
+                    return x.first < y.first;
+                }
+                );
+                f = true;
+            }
+        }
+        if(!f)
+            schedObj[query->value(1).toInt()-1][query->value(2).toInt()-1].second.push_back(tmp);
+
+
+
+    }
+
+    db->commit();
 }
+
