@@ -96,7 +96,7 @@ private:
     void drawSchedTable(QPainter &painter, QList<int> &verts, QList<int> &hors, QVector<QVector<QPair<int,QVector<SubInfo>>>>& schedObj);
     void drawSchedule(QPainter &painter,QRect pageRect, QString type, int row);
     void drawRotatedText(QPainter &painter, int x, int y, int width, int height, const QString &text);
-    QFont fillRect(QString& str,QRect& rect, int flags, QFont& font);
+    void fillRect(QPainter& painter, QString str,QRect rect, int flags, QFont font);
 
 private slots:
 

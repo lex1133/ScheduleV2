@@ -10,6 +10,7 @@ CatalogsForm::CatalogsForm(QWidget *parent) :
     ui->CatalogsClassesTable->setColumnHidden(0,true);
     ui->CatalogsRoomsTable->setColumnHidden(0,true);
     ui->CatalogsChairsTable->setColumnHidden(0,true);
+
     QFileInfo fin(QApplication::arguments()[0]);
     sett = new QSettings(fin.absolutePath() + "\\settings.ini",QSettings::IniFormat);
     if(!sett->contains("PathToSave"))
@@ -328,7 +329,7 @@ void CatalogsForm::on_ChairsSearchInCombo_currentIndexChanged(int index)
 
 void CatalogsForm::drawSchedule(QPainter &painter,QRect pageRect, QString type, int row)
 {
-    float v =13;
+    float v = 15;
     int padding = 20;
     QList<int> verts;
     QList<int> hors;
@@ -353,18 +354,18 @@ void CatalogsForm::drawSchedule(QPainter &painter,QRect pageRect, QString type, 
     QVector<QString> daynamesFull {"Понедельник","Вторник","Среда","Четверг","Пятница","Суббота"};
     QFont f = QFont("Arial",v*0.65);
 
-    verts.append(30 * v);
+    verts.append(1 * v);
     verts.append(verts.last() + 15*v);
     for (int i = 0; i < 8; i++)
     {
-        verts.append(verts.last() + 120*v);
+        verts.append(verts.last() + 123*v);
     }
 
-    hors.append(70 * v);
+    hors.append(55 * v);
     hors.append(hors.last() + 15*v);
     for (int i = 0; i < 6; i++)
     {
-        hors.append(hors.last() + 100*v);
+        hors.append(hors.last() + 105*v);
     }
 
 
@@ -412,8 +413,8 @@ void CatalogsForm::drawSchedule(QPainter &painter,QRect pageRect, QString type, 
     else if(type == "teacher")
         title = ui->CatalogsTeachersTable->item(row,1)->text();
     painter.drawText(verts[0], 20 * v,
-            verts[verts.size() - 1] - verts[0], 40 *v,
-            Qt::AlignVCenter | Qt::AlignCenter,
+            verts[verts.size() - 1] - verts[0] - 25*v, 40 * v - 25*v,
+            Qt::AlignVCenter | Qt::AlignHCenter,
             title);
     if(type == "class")
         drawClassSched(painter, verts, hors, ui->CatalogsClassesTable->item(row,0)->text().toInt());
@@ -862,7 +863,7 @@ void CatalogsForm::drawRoomSched(QPainter &painter, QList<int> &verts, QList<int
 void CatalogsForm::drawSchedTable(QPainter &painter, QList<int> &verts, QList<int> &hors, QVector<QVector<QPair<int, QVector<SubInfo> > > > &schedObj)
 {
 
-    QFont f;
+    QFont f = QFont("Arial",14);;
     for(int i = 0; i < schedObj.size(); i++)
     {
         for(int j = 0; j < schedObj[i].size()-1; j++)
@@ -925,29 +926,15 @@ void CatalogsForm::drawSchedTable(QPainter &painter, QList<int> &verts, QList<in
                         painter.drawLine(verts[2+j],hors[1+i],verts[2+j],hors[2+i]);
                 }
             }
+
             int daySize = schedObj[i][j].second.size();
-            if(schedObj[i][j].first > (hors[2]-hors[1])/3 && daySize > 2 && daySize < 4)
-                f = QFont("Arial",12*0.35);
-            else if(schedObj[i][j].first > (hors[2]-hors[1])/3 && daySize >= 4)
-                f = QFont("Arial",12*0.25);
-            else if(schedObj[i][j].first > (hors[2]-hors[1])/2 && daySize >= 3)
-                f = QFont("Arial",12*0.25);
-            else if(schedObj[i][j].first > (hors[2]-hors[1])/2 && daySize == 2)
-                f = QFont("Arial",13*0.25);
-            else if(schedObj[i][j].first > (hors[2]-hors[1])/3 && daySize == 1)
-                f = QFont("Arial",13*0.5);
-            else if(schedObj[i][j].first > (hors[2]-hors[1])/2 && daySize == 1)
-                f = QFont("Arial",13*0.35);
-            else if(daySize > 2 && daySize < 5 && schedObj[i][j].first == 0)
-                f = QFont("Arial",13*0.5);
-            else if(daySize == 1)
-                f = QFont("Arial",13*0.65);
-            else if(daySize == 2)
-                f = QFont("Arial",13*0.45);
-            else if(daySize > 2 && daySize < 5)
-                f = QFont("Arial",12*0.40);
-            else if(daySize >= 5)
-                f = QFont("Arial",12*0.35);
+            for(int p = 0; p < schedObj[i][j].second.size(); p++)
+            {
+                if(schedObj[i][j].second[p].name.isEmpty())
+                {
+                    daySize--;
+                }
+            }
 
 
             painter.setFont(f);
@@ -956,19 +943,25 @@ void CatalogsForm::drawSchedTable(QPainter &painter, QList<int> &verts, QList<in
             {
                 painter.drawLine(verts[1+j],hors[1+i]+10,verts[1+j],hors[2+i]+10);
             }
+            int height = hors[2] - hors[1] - schedObj[i][j].first;
             for(int k = 0; k < schedObj[i][j].second.size(); k++)
             {
                 if(!schedObj[i][j].second[k].name.isEmpty())
                 {
-                    if(schedObj[i][j].second[k].type != 2 && k > 0 && schedObj[i][j].second[k-1].type == 2)
+
+                    bool datesNorm = false;
+                    while(!datesNorm)
                     {
-                        if(schedObj[i][j].first > (hors[2]-hors[1])/3)
+                        datesNorm = true;
+                        for(int date = 0; date < schedObj[i][j].second[k].dates.size()-1; date++)
                         {
-                            if(schedObj[i][j].second.size() - k == 1)
+                            if(schedObj[i][j].second[k].dates[date].second.daysTo(schedObj[i][j].second[k].dates[date+1].first) == 7)
                             {
-                                f = QFont("Arial",13*0.5);
-                                painter.setFont(f);
+                                datesNorm = false;
+                                schedObj[i][j].second[k].dates[date].second = schedObj[i][j].second[k].dates[date+1].second;
+                                schedObj[i][j].second[k].dates.removeAt(date+1);
                             }
+
                         }
                     }
                     if(k == 0 && schedObj[i][j].first != 0)
@@ -1003,7 +996,7 @@ void CatalogsForm::drawSchedTable(QPainter &painter, QList<int> &verts, QList<in
 
                     StudyTypeObj.next();
 
-                    curSub += schedObj[i][j].second[k].name + "." + schedObj[i][j].second[k].teacher + " " + StudyTypeObj.value(1).toString()
+                    curSub += schedObj[i][j].second[k].name + ". " + schedObj[i][j].second[k].teacher + " " + StudyTypeObj.value(1).toString()
                             + (schedObj[i][j].second[k].type == 2 ?(schedObj[i][j].second[k].groupsNum > 1 ? (schedObj[i][j].second[k].group == QString::number(1) ? " (Б) " : " (А) ") : ""): "") + ". " + schedObj[i][j].second[k].room + ". " + "[";
                     for(int date = 0; date < schedObj[i][j].second[k].dates.size(); date++)
                     {
@@ -1045,18 +1038,18 @@ void CatalogsForm::drawSchedTable(QPainter &painter, QList<int> &verts, QList<in
                                 {
                                     complex = true;
                                     schedObj[i][j+1].second.removeAt(p);
-                                    drawArea = QRect(verts[1+j]+10,hors[1+i]+10+schedObj[i][j].first,verts[3]-verts[1]-20,hors[2]-hors[1]-20+schedObj[i][j].first);
+                                    drawArea = QRect(verts[1+j]+10,hors[1+i]+10+schedObj[i][j].first,verts[3]-verts[1]-20,(height/schedObj[i][j].second.size())-5);
                                     break;
                                 }
                             }
                         }
                         if(!complex)
                         {
-                            drawArea = QRect(verts[1+j]+10,hors[1+i]+10+schedObj[i][j].first,verts[2]-verts[1]-20,hors[2]-hors[1]-20+schedObj[i][j].first);
+                            drawArea = QRect(verts[1+j]+10,hors[1+i]+10+schedObj[i][j].first,verts[2]-verts[1]-20,(height/schedObj[i][j].second.size())-5);
                         }
-
-
+                        fillRect(painter,curSub,drawArea,Qt::AlignTop | Qt::AlignLeft | Qt::TextWordWrap,f);
                         painter.drawText(drawArea,Qt::AlignTop | Qt::AlignLeft | Qt::TextWordWrap,curSub,&br);
+
                         schedObj[i][j].first += br.height();
 
                         if(schedObj[i].size()-1 >= j+1 && complex)
@@ -1083,19 +1076,17 @@ void CatalogsForm::drawRotatedText(QPainter &painter, int x, int y, int width, i
     painter.restore();
 }
 
-QFont CatalogsForm::fillRect(QString& str,QRect &rect, int flags, QFont &font)
+void CatalogsForm::fillRect(QPainter& painter,QString str,QRect rect, int flags, QFont font)
 {
-    QFont result = font;
-    QPainter painter(this);
-    painter.setFont(result);
     QRect br;
-    while(br.height() > rect.height())
+    br = painter.fontMetrics().boundingRect(rect,flags,str);
+    qDebug()<<br.height()<<":"<<br.width()<<" "<<rect.height()<<rect.width();
+    while(br.height() > rect.height() || br.width() > rect.width())
     {
-        painter.drawText(rect,flags | Qt::TextDontPrint,str,&br);
-        result.setPointSizeF(result.pointSizeF()*0.95);
-        painter.setFont(result);
+        font.setPointSizeF(font.pointSizeF()*0.95);
+        painter.setFont(font);
+        br = painter.fontMetrics().boundingRect(rect,flags,str);
     }
-    return result;
 }
 
 void CatalogsForm::on_CatalogsChairsTable_cellDoubleClicked(int row, int column)
