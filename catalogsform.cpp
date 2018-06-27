@@ -927,23 +927,30 @@ void CatalogsForm::drawSchedTable(QPainter &painter, QList<int> &verts, QList<in
                 }
             }
 
-            int daySize = schedObj[i][j].second.size();
-            for(int p = 0; p < schedObj[i][j].second.size(); p++)
-            {
-                if(schedObj[i][j].second[p].name.isEmpty())
-                {
-                    daySize--;
-                }
-            }
-
-
             painter.setFont(f);
 
             if(schedObj[i][j].second.isEmpty() && schedObj[i][j].first == 0)
             {
                 painter.drawLine(verts[1+j],hors[1+i]+10,verts[1+j],hors[2+i]+10);
             }
-            int height = hors[2] - hors[1] - schedObj[i][j].first;
+            int height = hors[2] - hors[1];
+            int daySize = 0;
+            if(schedObj[i][j].second.size() > 0)
+            if(schedObj[i][j].second[0].type == 2 && schedObj[i][j].second[0].pair)
+            {
+                if(schedObj[i][j+1].second.size() > schedObj[i][j].second.size())
+                {
+                    daySize = schedObj[i][j+1].second.size();
+                }
+                else
+                {
+                    daySize = schedObj[i][j].second.size();
+                }
+            }
+            else
+            {
+                daySize = schedObj[i][j].second.size();
+            }
             for(int k = 0; k < schedObj[i][j].second.size(); k++)
             {
                 if(!schedObj[i][j].second[k].name.isEmpty())
@@ -972,7 +979,7 @@ void CatalogsForm::drawSchedTable(QPainter &painter, QList<int> &verts, QList<in
                             painter.drawLine(verts[2+j],hors[1+i]+schedObj[i][j].first+10,verts[j+3],hors[1+i]+schedObj[i][j].first+10);
                     }
                     if(k>0)
-                        if(schedObj[i][j].first != 0 && schedObj[i][j].second[k].type != 2 &&  schedObj[i][j].second[k-1].type == 2)
+                        if(schedObj[i][j].first != 0 && !schedObj[i][j].second[k].pair &&  schedObj[i][j].second[k-1].type == 2)
                         {
                             if(schedObj[i][j].second[k-1].pair == true)
                                 painter.drawLine(verts[1+j],hors[1+i]+schedObj[i][j].first+10,verts[j+3],hors[1+i]+schedObj[i][j].first+10);
@@ -1028,7 +1035,7 @@ void CatalogsForm::drawSchedTable(QPainter &painter, QList<int> &verts, QList<in
                         QRect drawArea;
                         bool complex = false;
                         if(schedObj[i].size() > j+1)
-                        {
+                        {                            
                             for(int p = 0; p < schedObj[i][j+1].second.size(); p++)
                             {
                                 auto first = schedObj[i][j+1].second[p];
@@ -1038,14 +1045,15 @@ void CatalogsForm::drawSchedTable(QPainter &painter, QList<int> &verts, QList<in
                                 {
                                     complex = true;
                                     schedObj[i][j+1].second.removeAt(p);
-                                    drawArea = QRect(verts[1+j]+10,hors[1+i]+10+schedObj[i][j].first,verts[3]-verts[1]-20,(height/schedObj[i][j].second.size())-5);
+
+                                    drawArea = QRect(verts[1+j]+10,hors[1+i]+10+schedObj[i][j].first,verts[3]-verts[1]-20,((height-schedObj[i][j].first)/(daySize-k))-5);
                                     break;
                                 }
                             }
                         }
                         if(!complex)
                         {
-                            drawArea = QRect(verts[1+j]+10,hors[1+i]+10+schedObj[i][j].first,verts[2]-verts[1]-20,(height/schedObj[i][j].second.size())-5);
+                            drawArea = QRect(verts[1+j]+10,hors[1+i]+10+schedObj[i][j].first,verts[2]-verts[1]-20,((height-schedObj[i][j].first)/(daySize-k))-5);
                         }
                         fillRect(painter,curSub,drawArea,Qt::AlignTop | Qt::AlignLeft | Qt::TextWordWrap,f);
                         painter.drawText(drawArea,Qt::AlignTop | Qt::AlignLeft | Qt::TextWordWrap,curSub,&br);
@@ -1078,9 +1086,9 @@ void CatalogsForm::drawRotatedText(QPainter &painter, int x, int y, int width, i
 
 void CatalogsForm::fillRect(QPainter& painter,QString str,QRect rect, int flags, QFont font)
 {
+    painter.setFont(font);
     QRect br;
     br = painter.fontMetrics().boundingRect(rect,flags,str);
-    qDebug()<<br.height()<<":"<<br.width()<<" "<<rect.height()<<rect.width();
     while(br.height() > rect.height() || br.width() > rect.width())
     {
         font.setPointSizeF(font.pointSizeF()*0.95);
@@ -1195,14 +1203,14 @@ void CatalogsForm::on_CatalogsTeachersTable_cellDoubleClicked(int row, int colum
 
 void CatalogsForm::on_ExportAllTeachersButton_clicked()
 {
-    QProgressDialog progress("Сохранение расписаний","Стоп", 0, ui->CatalogsClassesTable->rowCount(), this);
+    QProgressDialog progress("Сохранение расписаний","Стоп", 0, ui->CatalogsTeachersTable->rowCount(), this);
     progress.setWindowModality(Qt::WindowModal);
-    for(int i = 0; i < ui->CatalogsClassesTable->rowCount(); i++)
+    for(int i = 0; i < ui->CatalogsTeachersTable->rowCount(); i++)
     {
         if (progress.wasCanceled())
             break;
         progress.setValue(i);
-        progress.setLabelText("Сохранение расписаний " + QString::number(i+1) + "/" + QString::number(ui->CatalogsClassesTable->rowCount()));
+        progress.setLabelText("Сохранение расписаний " + QString::number(i+1) + "/" + QString::number(ui->CatalogsTeachersTable->rowCount()));
         QPrinter printer(QPrinter::HighResolution);
         printer.setOutputFormat(QPrinter::PdfFormat);
         printer.setColorMode(QPrinter::GrayScale);
@@ -1224,7 +1232,7 @@ void CatalogsForm::on_ExportAllTeachersButton_clicked()
         painter.end();
     }
 
-    progress.setValue(ui->CatalogsClassesTable->rowCount());
+    progress.setValue(ui->CatalogsTeachersTable->rowCount());
 
     QMessageBox::information(this,tr("Информация"),tr("Экспорт завершен!"),QMessageBox::Ok);
 }
@@ -1302,7 +1310,7 @@ void CatalogsForm::on_ExportAllRoomsButton_clicked()
 {
     QProgressDialog progress("Сохранение расписаний","Стоп", 0, ui->CatalogsRoomsTable->rowCount(), this);
     progress.setWindowModality(Qt::WindowModal);
-    for(int i = 0; i < ui->CatalogsClassesTable->rowCount(); i++)
+    for(int i = 0; i < ui->CatalogsRoomsTable->rowCount(); i++)
     {
         if (progress.wasCanceled())
             break;
@@ -1373,14 +1381,14 @@ void CatalogsForm::on_ExportSelectedRoomsPutton_clicked()
 void CatalogsForm::on_ExportSelectedTeachersButton_clicked()
 {
     auto selectedTeachers = ui->CatalogsTeachersTable->selectedItems();
-    QProgressDialog progress("Сохранение расписаний","Стоп", 0, selectedTeachers.count()/3, this);
+    QProgressDialog progress("Сохранение расписаний","Стоп", 0, selectedTeachers.count()/2, this);
     progress.setWindowModality(Qt::WindowModal);
-    for(int i = 0; i < selectedTeachers.count(); i+=3)
+    for(int i = 0; i < selectedTeachers.count(); i+=2)
     {
         if (progress.wasCanceled())
             break;
         progress.setValue(i/3);
-        progress.setLabelText("Сохранение расписаний " + QString::number(i/3+1) + "/" + QString::number(selectedTeachers.count()/3));
+        progress.setLabelText("Сохранение расписаний " + QString::number(i/2+1) + "/" + QString::number(selectedTeachers.count()/2));
         QPrinter printer(QPrinter::HighResolution);
         printer.setOutputFormat(QPrinter::PdfFormat);
         printer.setColorMode(QPrinter::GrayScale);
@@ -1401,7 +1409,7 @@ void CatalogsForm::on_ExportSelectedTeachersButton_clicked()
         painter.end();
     }
 
-    progress.setValue(selectedTeachers.count()/3);
+    progress.setValue(selectedTeachers.count()/2);
 
     QMessageBox::information(this,tr("Информация"),tr("Экспорт завершен!"),QMessageBox::Ok);
 }
