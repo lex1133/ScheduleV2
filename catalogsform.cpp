@@ -936,21 +936,21 @@ void CatalogsForm::drawSchedTable(QPainter &painter, QList<int> &verts, QList<in
             int height = hors[2] - hors[1];
             int daySize = 0;
             if(schedObj[i][j].second.size() > 0)
-            if(schedObj[i][j].second[0].type == 2 && schedObj[i][j].second[0].pair)
-            {
-                if(schedObj[i][j+1].second.size() > schedObj[i][j].second.size())
+                if(schedObj[i][j].second[0].type == 2 && schedObj[i][j].second[0].pair)
                 {
-                    daySize = schedObj[i][j+1].second.size();
+                    if(schedObj[i][j+1].second.size() > schedObj[i][j].second.size())
+                    {
+                        daySize = schedObj[i][j+1].second.size();
+                    }
+                    else
+                    {
+                        daySize = schedObj[i][j].second.size();
+                    }
                 }
                 else
                 {
                     daySize = schedObj[i][j].second.size();
                 }
-            }
-            else
-            {
-                daySize = schedObj[i][j].second.size();
-            }
             for(int k = 0; k < schedObj[i][j].second.size(); k++)
             {
                 if(!schedObj[i][j].second[k].name.isEmpty())
@@ -1035,7 +1035,7 @@ void CatalogsForm::drawSchedTable(QPainter &painter, QList<int> &verts, QList<in
                         QRect drawArea;
                         bool complex = false;
                         if(schedObj[i].size() > j+1)
-                        {                            
+                        {
                             for(int p = 0; p < schedObj[i][j+1].second.size(); p++)
                             {
                                 auto first = schedObj[i][j+1].second[p];
@@ -1119,19 +1119,17 @@ void CatalogsForm::on_CatalogsClassesTable_cellDoubleClicked(int row, int column
     if(!painter.begin(&printer))
     {
         qWarning("Falied");
-        return;
     }
 
-    drawSchedule(painter, printer.pageRect(),"class",row);
+    else
+    {
 
-    painter.end();
+        drawSchedule(painter, printer.pageRect(),"class",row);
 
-    QPrintDialog *PrtDialog;
-    PrtDialog=new QPrintDialog(&printer);
-    PrtDialog->show();
-    QMessageBox::information(this,tr("Информация"),tr("Экспорт завершен!"),QMessageBox::Ok);
-    qDebug()<<"Time elapsed: "<<timer.elapsed();
-
+        painter.end();
+        QMessageBox::information(this,tr("Информация"),tr("Экспорт завершен!"),QMessageBox::Ok);
+        qDebug()<<"Time elapsed: "<<timer.elapsed();
+    }
 }
 
 
@@ -1161,9 +1159,12 @@ void CatalogsForm::on_ExportAllClassesButton_clicked()
             qWarning("Falied");
         }
 
-        drawSchedule(painter, printer.pageRect(),"class",i);
+        else
+        {
+            drawSchedule(painter, printer.pageRect(),"class",i);
 
-        painter.end();
+            painter.end();
+        }
     }
 
     progress.setValue(ui->CatalogsClassesTable->rowCount());
@@ -1188,12 +1189,15 @@ void CatalogsForm::on_CatalogsTeachersTable_cellDoubleClicked(int row, int colum
     if(!painter.begin(&printer))
     {
         qWarning("Falied");
-        return;
     }
 
-    drawSchedule(painter, printer.pageRect(),"teacher",row);
+    else
+    {
 
-    painter.end();
+        drawSchedule(painter, printer.pageRect(),"teacher",row);
+
+        painter.end();
+    }
 
 
     qDebug()<<"Time elapsed: "<<timer.elapsed();
@@ -1224,12 +1228,14 @@ void CatalogsForm::on_ExportAllTeachersButton_clicked()
         if(!painter.begin(&printer))
         {
             qWarning("Falied");
-            return;
         }
 
-        drawSchedule(painter, printer.pageRect(),"teacher",i);
+        else
+        {
+            drawSchedule(painter, printer.pageRect(),"teacher",i);
 
-        painter.end();
+            painter.end();
+        }
     }
 
     progress.setValue(ui->CatalogsTeachersTable->rowCount());
@@ -1263,9 +1269,13 @@ void CatalogsForm::on_ExportSelectedClassesButton_clicked()
             qWarning("Falied");
         }
 
-        drawSchedule(painter, printer.pageRect(),"class",selectedClasses[i]->row());
+        else
+        {
 
-        painter.end();
+            drawSchedule(painter, printer.pageRect(),"class",selectedClasses[i]->row());
+
+            painter.end();
+        }
     }
 
     progress.setValue(selectedClasses.count()/3);
@@ -1293,13 +1303,14 @@ void CatalogsForm::on_CatalogsRoomsTable_cellDoubleClicked(int row, int column)
     if(!painter.begin(&printer))
     {
         qWarning("Falied");
-        return;
     }
+    else
+    {
 
-    drawSchedule(painter, printer.pageRect(),"room",row);
+        drawSchedule(painter, printer.pageRect(),"room",row);
 
-    painter.end();
-
+        painter.end();
+    }
 
     qDebug()<<"Time elapsed: "<<timer.elapsed();
 
@@ -1324,17 +1335,22 @@ void CatalogsForm::on_ExportAllRoomsButton_clicked()
         QDir d;
         if(!d.exists(sett->value("PathToSave").toString() + "\\Расписание для печати\\" + mw->curProject + "\\Аудитории\\"))
             d.mkpath(sett->value("PathToSave").toString() + "\\Расписание для печати\\" + mw->curProject + "\\Аудитории\\");
-        printer.setOutputFileName(sett->value("PathToSave").toString() + "\\Расписание для печати\\" + mw->curProject + "\\Аудитории\\" + ui->CatalogsRoomsTable->item(i,1)->text() + ".pdf");
+        QString str = ui->CatalogsRoomsTable->item(i,1)->text();
+        while(str.contains('/'))
+            str.replace(str.indexOf('/'),1,'-');
+        printer.setOutputFileName(sett->value("PathToSave").toString() + "\\Расписание для печати\\" + mw->curProject + "\\Аудитории\\" + str + ".pdf");
         QPainter painter;
         if(!painter.begin(&printer))
         {
             qWarning("Falied");
-            return;
         }
+        else
+        {
 
-        drawSchedule(painter, printer.pageRect(),"room",i);
+            drawSchedule(painter, printer.pageRect(),"room",i);
 
-        painter.end();
+            painter.end();
+        }
     }
 
     progress.setValue(ui->CatalogsRoomsTable->rowCount());
@@ -1361,16 +1377,22 @@ void CatalogsForm::on_ExportSelectedRoomsPutton_clicked()
         QDir d;
         if(!d.exists(sett->value("PathToSave").toString() + "\\Расписание для печати\\" + mw->curProject + "\\Аудитории\\"))
             d.mkpath(sett->value("PathToSave").toString() + "\\Расписание для печати\\" + mw->curProject + "\\Аудитории\\");
-        printer.setOutputFileName(sett->value("PathToSave").toString() + "\\Расписание для печати\\" + mw->curProject + "\\Аудитории\\" + ui->CatalogsRoomsTable->item(selectedRooms[i]->row(),1)->text() + ".pdf");
+        QString str = ui->CatalogsRoomsTable->item(i,1)->text();
+        while(str.contains('/'))
+            str.replace(str.indexOf('/'),1,'-');
+        printer.setOutputFileName(sett->value("PathToSave").toString() + "\\Расписание для печати\\" + mw->curProject + "\\Аудитории\\" + str + ".pdf");
         QPainter painter;
         if(!painter.begin(&printer))
         {
             qWarning("Falied");
         }
 
-        drawSchedule(painter, printer.pageRect(),"room",selectedRooms[i]->row());
+        else
+        {
+            drawSchedule(painter, printer.pageRect(),"room",selectedRooms[i]->row());
 
-        painter.end();
+            painter.end();
+        }
     }
 
     progress.setValue(selectedRooms.count()/3);
@@ -1404,9 +1426,12 @@ void CatalogsForm::on_ExportSelectedTeachersButton_clicked()
             qWarning("Falied");
         }
 
-        drawSchedule(painter, printer.pageRect(),"teacher",selectedTeachers[i]->row());
+        else
+        {
+            drawSchedule(painter, printer.pageRect(),"teacher",selectedTeachers[i]->row());
 
-        painter.end();
+            painter.end();
+        }
     }
 
     progress.setValue(selectedTeachers.count()/2);
@@ -1414,8 +1439,10 @@ void CatalogsForm::on_ExportSelectedTeachersButton_clicked()
     QMessageBox::information(this,tr("Информация"),tr("Экспорт завершен!"),QMessageBox::Ok);
 }
 
-void CatalogsForm::on_ExportToGoogle_clicked()
+void CatalogsForm::on_ExportTeacherToGoogle_clicked()
 {
+
+    auto selectedTeachers = ui->CatalogsTeachersTable->selectedItems();
     db->transaction();
     QVector<QVector<QPair<int,QVector<SubInfo>>>> schedObj;
     schedObj.resize(6);
@@ -1530,29 +1557,207 @@ void CatalogsForm::on_ExportToGoogle_clicked()
         date.second = endDate.addDays(-(6-(query->value(1).toInt()-1)));
         tmp.dates.push_back(date);
         tmp.group = QString::number(query->value(3).toInt());
-        bool f = false;
-        for(int sub = 0; sub < schedObj[query->value(1).toInt()-1][query->value(2).toInt()-1].second.size(); sub++)
+        schedObj[query->value(1).toInt()-1][query->value(2).toInt()-1].second.push_back(tmp);
+    }
+
+    db->commit();
+    QDir d;
+    if(!d.exists(sett->value("PathToSave").toString() + "\\Расписание для печати\\" + mw->curProject + "\\Преподаватели\\Google\\"))
+        d.mkpath(sett->value("PathToSave").toString() + "\\Расписание для печати\\" + mw->curProject + "\\Преподаватели\\Google\\");
+    QFile outputFile(sett->value("PathToSave").toString() + "\\Расписание для печати\\" + mw->curProject + "\\Преподаватели\\Google\\" + ui->CatalogsTeachersTable->item(ui->CatalogsTeachersTable->currentRow(),1)->text() + ".csv");
+    outputFile.open(QIODevice::WriteOnly);
+    if(!outputFile.isOpen()){
+        qDebug() <<"- Error, unable to open for output";
+    }
+    QTextStream outStream(&outputFile);
+
+      outStream << "Subject,Start Date,Start Time,End Date,End Time,Description,Location\n";
+
+      QVector<QString> hours;
+      if(!query->exec("SELECT * FROM `Times`"))
+      {
+          qDebug()<<"Times query error";
+      }
+      query->next();
+      while(query->next())
+      {
+          hours<<query->value(1).toString();
+      }
+    for(int i = 0; i < schedObj.size(); i++)
+    {
+        for(int j = 0; j < schedObj[i].size(); j++)
         {
-            auto tmp1 = schedObj[query->value(1).toInt()-1][query->value(2).toInt()-1].second[sub];
-            if(tmp1.equal(tmp))
+            for(int k = 0; k < schedObj[i][j].second.size(); k++)
             {
-                schedObj[query->value(1).toInt()-1][query->value(2).toInt()-1].second[sub].dates.push_back(tmp.dates[0]);
-                std::sort(schedObj[query->value(1).toInt()-1][query->value(2).toInt()-1].second[sub].dates.begin(),schedObj[query->value(1).toInt()-1][query->value(2).toInt()-1].second[sub].dates.end(),
-                        [](const QPair<QDate,QDate>& x,const QPair<QDate,QDate>& y) -> bool
-                {
-                    return x.first < y.first;
-                }
-                );
-                f = true;
+                outStream<<"\""<<schedObj[i][j].second[k].name<<"\""<<","<<schedObj[i][j].second[k].dates[0].first.toString("dd/MM/yy")<<","<<hours[j].mid(0,5)<<","<<
+                           schedObj[i][j].second[k].dates[0].second.toString("dd/MM/yy")<<","<<hours[j].mid(8,5)<<","<<"\""<<schedObj[i][j].second[k].teacher<<"\""<<","<<schedObj[i][j].second[k].room<<"\n";
             }
         }
-        if(!f)
-            schedObj[query->value(1).toInt()-1][query->value(2).toInt()-1].second.push_back(tmp);
+    }
+
+    outputFile.close();
+
+    QMessageBox::information(this,tr("Информация"),tr("Экспорт завершен!"),QMessageBox::Ok);
+}
 
 
+void CatalogsForm::on_ExportClassToGoogle_clicked()
+{
+    db->transaction();
+    query->prepare("SELECT * FROM `Classes` WHERE id=:classId");
+    query->bindValue(":classId",ui->CatalogsClassesTable->item(ui->CatalogsClassesTable->currentRow(),0)->text());
+    if(!query->exec())
+    {
+        qDebug()<<"Scheds query error!";
+        loadResult = false;
+        return;
+    }
+    int numberOfRows = 0;
+    if(query->last())
+    {
+        numberOfRows =  query->at() + 1;
+        query->first();
+        query->previous();
+    }
+
+
+    QVector<QVector<QPair<int,QVector<SubInfo>>>> schedObj;
+    schedObj.resize(6);
+    for(int i = 0; i < 6; i++)
+        schedObj[i].resize(8);
+    query->prepare("SELECT * FROM `Scheds` WHERE loadId IN (select id from `Loads` where klassIdList like '% " + ui->CatalogsClassesTable->item(ui->CatalogsClassesTable->currentRow(),0)->text() +" %')");
+    if(!query->exec())
+    {
+        qDebug()<<"Scheds query error!";
+        loadResult = false;
+        return;
+    }
+    while (query->next())
+    {
+        QSqlQuery LoadObj = QSqlQuery();
+        LoadObj.prepare("SELECT * FROM `Loads` WHERE id=:loadId");
+        LoadObj.bindValue(":loadId",query->value(4));
+        if(!LoadObj.exec())
+        {
+            qDebug()<<"Load query error!";
+            loadResult = false;
+            return;
+        }
+        LoadObj.next();
+
+        SubInfo tmp;
+        QDate beginDate = QDate::fromString(query->value(6).toString(),"yyyyMMdd");
+        QDate endDate = QDate::fromString(query->value(7).toString(),"yyyyMMdd");
+
+        QSqlQuery LoadGroupObj = QSqlQuery();
+        LoadGroupObj.prepare("SELECT * FROM `LoadGroups` WHERE loadId=:loadId");
+        int loadId = query->value(4).toInt();
+        LoadGroupObj.bindValue(":loadId",loadId);
+        if(!LoadGroupObj.exec())
+        {
+            qDebug()<<"LoadGroupObj query error!";
+            loadResult = false;
+            return;
+        }
+        numberOfRows = 0;
+        if(LoadGroupObj.last())
+        {
+            numberOfRows =  LoadGroupObj.at() + 1;
+            LoadGroupObj.first();
+            LoadGroupObj.previous();
+        }
+        LoadGroupObj.next();
+
+        QSqlQuery SubjectObj = QSqlQuery();
+        SubjectObj.prepare("SELECT * FROM `Subjects` WHERE id=:subjectId");
+        SubjectObj.bindValue(":subjectId",LoadGroupObj.value(3));
+        if(!SubjectObj.exec())
+        {
+            qDebug()<<"SubjectObj query error!";
+            loadResult = false;
+            return;
+        }
+        SubjectObj.next();
+
+        QString subject = SubjectObj.value(1).toString();
+        tmp.name = subject;
+        tmp.type = LoadGroupObj.value(5).toInt();
+        tmp.groupsNum = numberOfRows;
+
+        QSqlQuery TeacherObj = QSqlQuery();
+        TeacherObj.prepare("SELECT * FROM `Teachers` WHERE id=:teacherId");
+        TeacherObj.bindValue(":teacherId",LoadGroupObj.value(2).toInt());
+        if(!TeacherObj.exec())
+        {
+            qDebug()<<"TeacherObj query error!";
+            loadResult = false;
+            return;
+        }
+        TeacherObj.next();
+
+        if(TeacherObj.value(1).toString()[0] != '_' && TeacherObj.value(1).toString()[0] != '=')
+            tmp.teacher = TeacherObj.value(1).toString() + " " + TeacherObj.value(2).toString()[0] + "." + TeacherObj.value(3).toString()[0] + ".";
+        if(LoadGroupObj.value(4).toString().size() > 0)
+        {
+
+            QSqlQuery RoomObj = QSqlQuery();
+            RoomObj.prepare("SELECT * FROM `Rooms` WHERE id=:roomId");
+            RoomObj.bindValue(":roomId",LoadGroupObj.value(4).toInt());
+            if(!RoomObj.exec())
+            {
+                qDebug()<<"RoomObj query error!";
+                loadResult = false;
+                return;
+            }
+            RoomObj.next();
+            tmp.room = RoomObj.value(1).toString();
+        }
+
+        QPair<QDate, QDate> date;
+        date.first = beginDate.addDays(query->value(1).toInt()-1);
+        date.second = endDate.addDays(-(6-(query->value(1).toInt()-1)));
+        tmp.dates.push_back(date);
+        tmp.group = QString::number(query->value(3).toInt());
+        schedObj[query->value(1).toInt()-1][query->value(2).toInt()-1].second.push_back(tmp);
 
     }
 
     db->commit();
-}
+    QDir d;
+    if(!d.exists(sett->value("PathToSave").toString() + "\\Расписание для печати\\" + mw->curProject + "\\Группы\\Google\\"))
+        d.mkpath(sett->value("PathToSave").toString() + "\\Расписание для печати\\" + mw->curProject + "\\Группы\\Google\\");
+    QFile outputFile(sett->value("PathToSave").toString() + "\\Расписание для печати\\" + mw->curProject + "\\Группы\\Google\\" + ui->CatalogsClassesTable->item(ui->CatalogsClassesTable->currentRow(),1)->text() + ".csv");
+    outputFile.open(QIODevice::WriteOnly);
+    if(!outputFile.isOpen()){
+        qDebug() <<"- Error, unable to open for output";
+    }
+    QTextStream outStream(&outputFile);
 
+      outStream << "Subject,Start Date,Start Time,End Date,End Time,Description,Location\n";
+
+      QVector<QString> hours;
+      if(!query->exec("SELECT * FROM `Times`"))
+      {
+          qDebug()<<"Times query error";
+      }
+      query->next();
+      while(query->next())
+      {
+          hours<<query->value(1).toString();
+      }
+    for(int i = 0; i < schedObj.size(); i++)
+    {
+        for(int j = 0; j < schedObj[i].size(); j++)
+        {
+            for(int k = 0; k < schedObj[i][j].second.size(); k++)
+            {
+                outStream<<"\""<<schedObj[i][j].second[k].name<<"\""<<","<<schedObj[i][j].second[k].dates[0].first.toString("dd/MM/yy")<<","<<hours[j].mid(0,5)<<","<<
+                           schedObj[i][j].second[k].dates[0].second.toString("dd/MM/yy")<<","<<hours[j].mid(8,5)<<","<<"\""<<schedObj[i][j].second[k].teacher<<"\""<<","<<schedObj[i][j].second[k].room<<"\n";
+            }
+        }
+    }
+
+    outputFile.close();
+
+    QMessageBox::information(this,tr("Информация"),tr("Экспорт завершен!"),QMessageBox::Ok);
+}

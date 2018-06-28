@@ -197,7 +197,8 @@ void MainWindow::on_MenuAbout_triggered()
     QMessageBox::about(this,tr("О программе"),tr("<center><h1>Расписание V2.0</h1></center><br>"
                                                  "Программа разработанна по заказу МГТУ ВО \"СТАНКИН\" в рамках производственной практики<br>"
                                                  "Автор: Данилин Алексей Олегович ИДБ-15-15<br>"
-                                                 "E-mail: <a href=\"mailto:stud115089@stankin.ru\" target=\"_top\">stud115089@stankin.ru</a><br>"));
+                                                 "E-mail: <a href=\"mailto:stud115089@stankin.ru\" target=\"_top\">stud115089@stankin.ru</a><br>"
+                                                 "Ссылка на исходники: <a href=\"https://github.com/lex1133/ScheduleV2\">https://github.com/lex1133/ScheduleV2</a>"));
 }
 
 void MainWindow::on_MenuSettings_triggered()

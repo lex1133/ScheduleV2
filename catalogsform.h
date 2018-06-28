@@ -115,8 +115,9 @@ private slots:
     void on_CatalogsRoomsTable_cellDoubleClicked(int row, int column);
     void on_ExportAllRoomsButton_clicked();
     void on_ExportSelectedRoomsPutton_clicked();
-    void on_ExportToGoogle_clicked();
+    void on_ExportTeacherToGoogle_clicked();
     void on_ExportSelectedTeachersButton_clicked();
+    void on_ExportClassToGoogle_clicked();
 };
 
 

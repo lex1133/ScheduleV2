@@ -16,7 +16,7 @@ RC_ICONS = Icon.ico
 VERSION = 0.0.0.1
 QMAKE_TARGET_COMPANY = "lex1133's Software"
 QMAKE_TARGET_PRODUCT = "Schedule v2.0"
-QMAKE_TARGET_DESCRIPTION = "пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ"
+QMAKE_TARGET_DESCRIPTION = "Расписание v2.0"
 QMAKE_TARGET_COPYRIGHT = "Copyright"
 
 DEFINES += QT_DEPRECATED_WARNINGS
